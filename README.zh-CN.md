@@ -210,7 +210,3 @@ Mini Token Monitor 在本地处理使用日志，不会向项目维护者发送�
 
 - [Token Monitor](https://github.com/Javis603) 提供完整版的Token Monitor。
 
-## 许可证
-
-[MIT](LICENSE) © [@Javis](https://github.com/Javis603)
-

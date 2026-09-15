@@ -209,7 +209,3 @@ Issues and PRs are welcome. Project conventions, architecture notes, and the com
 ## Acknowledgments
 
 - [Token Monitor](https://github.com/Javis603) 。
-
-## License
-
-[MIT](LICENSE) © [@Javis](https://github.com/Javis603)

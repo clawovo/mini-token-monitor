@@ -209,7 +209,3 @@ Mini Token Monitor 會在本機處理使用紀錄，不會向專案維護者傳�
 ## 致謝
 
 - [Token Monitor](https://github.com/Javis603)。
-
-## 授權
-
-[MIT](LICENSE) © [@Javis](https://github.com/Javis603)

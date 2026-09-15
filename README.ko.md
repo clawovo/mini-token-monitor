@@ -209,7 +209,3 @@ Issue와 PR을 환영합니다. 프로젝트 규약, 아키텍처 노트, 명령
 ## 감사의 글
 
 - [Token Monitor](https://github.com/Javis603) 。
-
-## 라이선스
-
-[MIT](LICENSE) © [@Javis](https://github.com/Javis603)

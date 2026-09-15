@@ -209,7 +209,3 @@ Issue や PR を歓迎します。プロジェクトの規約、アーキテク�
 ## 謝辞
 
 - [Token Monitor](https://github.com/Javis603) 。
-
-## ライセンス
-
-[MIT](LICENSE) © [@Javis](https://github.com/Javis603)
