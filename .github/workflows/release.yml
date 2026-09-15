@@ -50,6 +50,13 @@ jobs:
     permissions:
       actions: read
       contents: read
+    # Code signing is optional infrastructure: the macOS certificate and the
+    # SignPath account belong to whoever owns the release. When either is absent
+    # the jobs below build and publish an unsigned installer instead of failing,
+    # which is what lets a fork with no signing credentials ship a release.
+    env:
+      MAC_SIGNING: ${{ secrets.MAC_CSC_LINK != '' }}
+      WIN_SIGNING: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
@@ -79,7 +86,7 @@ jobs:
           node -e "const config = require('./scripts/electron-builder.config.js'); const installed = require('electron/package.json').version; const effective = config.electronVersion || installed; const expected = process.env.TOKEN_MONITOR_LINUX_ELECTRON_VERSION || installed; console.log('Electron packaging version:', effective, '(installed:', installed + ')'); if (effective !== expected) throw new Error('Electron packaging version mismatch: expected ' + expected + ', got ' + effective);"
       # electron-builder needs the notarization key as a file, not the base64 secret directly.
       - name: Decode Apple API key
-        if: matrix.target == 'mac'
+        if: matrix.target == 'mac' && env.MAC_SIGNING == 'true'
         run: |
           echo "${{ secrets.APPLE_API_KEY_BASE64 }}" | base64 --decode > "$RUNNER_TEMP/apple_api_key.p8"
           echo "APPLE_API_KEY=$RUNNER_TEMP/apple_api_key.p8" >> "$GITHUB_ENV"
@@ -96,7 +103,7 @@ jobs:
           APPLE_API_ISSUER: ${{ matrix.target == 'mac' && secrets.APPLE_API_ISSUER || '' }}
           TOKEN_MONITOR_WIDGET_ENABLED: '0'
       - name: Verify mac code signing and notarization
-        if: matrix.target == 'mac'
+        if: matrix.target == 'mac' && env.MAC_SIGNING == 'true'
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
@@ -126,15 +133,15 @@ jobs:
       # NSIS installer and portable wrapper. electron-builder's --prepackaged
       # mode then packages these exact signed bytes without rebuilding the app.
       - name: Build unpacked Windows application
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         run: npm run dist:win:dir
       # --prepackaged deliberately skips electron-builder's afterPack hooks, so
       # preserve the same updater config that a normal NSIS build would embed.
       - name: Write Windows updater configuration
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         run: node scripts/signpath-windows-artifacts.js write-update-config dist/win-unpacked
       - name: Prepare Windows application for signing
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         id: prepare-unsigned-win-app
         shell: bash
         run: |
@@ -142,7 +149,7 @@ jobs:
           node scripts/signpath-windows-artifacts.js prepare-application \
             dist/win-unpacked "$RUNNER_TEMP/signpath-application-input" >> "$GITHUB_OUTPUT"
       - name: Upload unsigned Windows application
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         id: upload-unsigned-win-app
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -154,7 +161,7 @@ jobs:
           # path required by the SignPath artifact configuration.
           path: ${{ runner.temp }}/signpath-application-input
       - name: Code-sign Windows application (SignPath)
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         uses: SignPath/github-action-submit-signing-request@b9d91eadd323de506c0c81cf0c7fe7438f3360fd # v2.2
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -168,14 +175,14 @@ jobs:
           parameters: |
             version: ${{ toJSON(steps.prepare-unsigned-win-app.outputs.product_version) }}
       - name: Apply signed Windows application
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         shell: bash
         run: |
           set -euo pipefail
           node scripts/signpath-windows-artifacts.js apply-application \
             dist/win-unpacked dist/signpath-application-output
       - name: Verify Windows application Authenticode signature
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         shell: pwsh
         run: |
           $application = Get-Item -LiteralPath (Join-Path 'dist/win-unpacked' '${{ steps.prepare-unsigned-win-app.outputs.application }}') -ErrorAction Stop
@@ -192,13 +199,13 @@ jobs:
             throw "$($application.Name) has no Authenticode timestamp"
           }
       - name: Package signed Windows application
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         run: npm run dist:win:prepackaged
       # Keep the two public filenames in separate directories so SignPath can
       # require exactly one installer and one portable exe without overlapping
       # wildcard patterns.
       - name: Prepare Windows artifacts for signing
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         id: prepare-unsigned-win
         shell: bash
         run: |
@@ -206,7 +213,7 @@ jobs:
           node scripts/signpath-windows-artifacts.js prepare-artifacts \
             dist "$RUNNER_TEMP/signpath-artifact-input" >> "$GITHUB_OUTPUT"
       - name: Upload unsigned Windows artifacts
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         id: upload-unsigned-win
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -221,7 +228,7 @@ jobs:
             ${{ runner.temp }}/signpath-artifact-input/installer/${{ steps.prepare-unsigned-win.outputs.installer }}
             ${{ runner.temp }}/signpath-artifact-input/portable/${{ steps.prepare-unsigned-win.outputs.portable }}
       - name: Code-sign Windows artifacts (SignPath)
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         uses: SignPath/github-action-submit-signing-request@b9d91eadd323de506c0c81cf0c7fe7438f3360fd # v2.2
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -239,7 +246,7 @@ jobs:
       # unsigned one; this rewrites latest.yml's sha512/size and rebuilds the
       # blockmap from the signed bytes so differential updates keep working.
       - name: Apply signed Windows artifacts
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -249,7 +256,7 @@ jobs:
       # confirm the file it gave back is actually validly signed by the expected
       # certificate before it ships, mirroring the mac codesign/spctl checks above.
       - name: Verify Windows artifact Authenticode signatures
-        if: matrix.target == 'win'
+        if: matrix.target == 'win' && env.WIN_SIGNING == 'true'
         shell: pwsh
         run: |
           $expected = @(
@@ -271,6 +278,11 @@ jobs:
               throw "$fileName has no Authenticode timestamp"
             }
           }
+      # Without SignPath the two public Windows installers are built directly by
+      # electron-builder instead of through the sign-then-repackage chain above.
+      - name: Build unsigned Windows artifacts
+        if: matrix.target == 'win' && env.WIN_SIGNING != 'true'
+        run: npm run dist:win
       - name: Verify updater artifact names
         run: npm run verify:release-artifact-names
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

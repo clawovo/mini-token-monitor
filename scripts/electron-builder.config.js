@@ -9,9 +9,27 @@ const { resolveElectronVersionOverride } = require('./electron-builder-version')
 // and Windows continue to use the package.json Electron version.
 const electronVersion = resolveElectronVersionOverride();
 
-module.exports = createBuilderConfig({
+// package.json asks for a signature so a release cannot ship an unsigned mac
+// build by accident. That requirement is only honoured when a certificate was
+// actually supplied — electron-builder reads CSC_LINK/CSC_NAME, and the release
+// workflow sets them from repository secrets. Someone building a fork (or a
+// local dmg) without a Developer ID gets an unsigned installer instead of a
+// hard failure.
+const macSigningConfigured = Boolean(
+  process.env.CSC_LINK
+  || process.env.CSC_NAME
+  || process.env.TOKEN_MONITOR_MAC_SIGNING === '1'
+);
+
+const config = createBuilderConfig({
   baseConfig: {
     ...packageJson.build,
     ...(electronVersion ? { electronVersion } : {})
   }
 });
+
+if (config.mac) {
+  config.mac = { ...config.mac, forceCodeSigning: macSigningConfigured };
+}
+
+module.exports = config;
