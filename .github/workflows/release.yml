@@ -94,7 +94,16 @@ jobs:
       # run without libfuse2 (absent on the runners).
       - name: Build platform artifacts
         if: matrix.target != 'win'
-        run: npm run ${{ matrix.dist_script }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # An empty CSC_LINK is not "unset" to electron-builder: it resolves it as
+          # a certificate path and fails with "<repo root> not a file". Drop the
+          # signing variables entirely when their secret is not configured.
+          for name in CSC_LINK CSC_KEY_PASSWORD CSC_NAME APPLE_API_KEY APPLE_API_KEY_ID APPLE_API_ISSUER; do
+            if [ -z "${!name:-}" ]; then unset "$name"; fi
+          done
+          npm run ${{ matrix.dist_script }}
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'
           CSC_LINK: ${{ matrix.target == 'mac' && secrets.MAC_CSC_LINK || '' }}
