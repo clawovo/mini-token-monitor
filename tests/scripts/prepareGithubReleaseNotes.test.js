@@ -9,7 +9,8 @@ const {
   fetchDirectCommits,
   fetchGeneratedNotes,
   fullChangelogRange,
-  isReleaseCommit
+  isReleaseCommit,
+  tagExists
 } = require('../../scripts/prepare-github-release-notes');
 
 test('composeReleaseNotes inserts GitHub notes below the single summary link', () => {
@@ -127,6 +128,33 @@ test('fetchGeneratedNotes requests GitHub generated notes for the pushed tag', a
     tag_name: 'v1.1.0',
     previous_tag_name: 'v1.0.0'
   });
+});
+
+test('tagExists reports whether the release base tag exists', async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (url.endsWith('/git/ref/tags/v1.0.0')) return { ok: true, status: 200, async json() { return {}; } };
+    return { ok: false, status: 404, async text() { return 'Not Found'; } };
+  };
+  assert.equal(await tagExists({ repository: 'clawovo/mini-token-monitor', tag: 'v1.0.0', token: 't', fetchImpl }), true);
+  assert.equal(await tagExists({ repository: 'clawovo/mini-token-monitor', tag: 'v0.0.0', token: 't', fetchImpl }), false);
+  assert.equal(calls[0], 'https://api.github.com/repos/clawovo/mini-token-monitor/git/ref/tags/v1.0.0');
+});
+
+test('fetchGeneratedNotes omits previous_tag_name when the base tag is unknown', async () => {
+  let request;
+  const body = await fetchGeneratedNotes({
+    repository: 'clawovo/mini-token-monitor',
+    tag: 'v0.1.0',
+    token: 'test-token',
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return { ok: true, async json() { return { body: 'first release notes' }; } };
+    }
+  });
+  assert.equal(body, 'first release notes');
+  assert.deepEqual(JSON.parse(request.options.body), { tag_name: 'v0.1.0' });
 });
 
 test('fetchGeneratedNotes honors GITHUB_API_URL and fails when its timeout signal fires', async () => {

@@ -111,14 +111,20 @@ async function fetchGeneratedNotes({
   fetchImpl = fetch,
   signalFactory = requestSignal
 }) {
-  if (!repository || !tag || !previousTag || !token) {
-    throw new Error('repository, current tag, previous tag, and token are required');
+  if (!repository || !tag || !token) {
+    throw new Error('repository, current tag, and token are required');
   }
+
+  // A first release has no earlier tag to compare against. GitHub's own notes
+  // generator handles that case when previous_tag_name is omitted, so the
+  // parameter is only sent when a base tag is known to exist.
+  const requestBody = { tag_name: tag };
+  if (previousTag) requestBody.previous_tag_name = previousTag;
 
   const response = await githubFetch(apiEndpoint(apiUrl, `/repos/${repository}/releases/generate-notes`), {
     method: 'POST',
     headers: requestHeaders(token),
-    body: JSON.stringify({ tag_name: tag, previous_tag_name: previousTag }),
+    body: JSON.stringify(requestBody),
     signal: signalFactory()
   }, fetchImpl, 'GitHub release-notes generation');
 
@@ -153,6 +159,28 @@ async function githubJson(url, token, fetchImpl, signalFactory) {
   } catch {
     throw new Error('GitHub changelog response was not valid JSON');
   }
+}
+
+async function tagExists({
+  repository,
+  tag,
+  token,
+  apiUrl = process.env.GITHUB_API_URL || 'https://api.github.com',
+  fetchImpl = fetch,
+  signalFactory = requestSignal
+}) {
+  if (!repository || !tag || !token) {
+    throw new Error('repository, tag, and token are required');
+  }
+  const response = await githubFetch(apiEndpoint(apiUrl, `/repos/${repository}/git/ref/tags/${encodeURIComponent(tag)}`), {
+    headers: requestHeaders(token),
+    signal: signalFactory()
+  }, fetchImpl, 'GitHub tag lookup');
+  if (response.status === 404) return false;
+  if (!response.ok) {
+    throw new Error(`GitHub tag lookup failed (${response.status}): ${await response.text()}`);
+  }
+  return true;
 }
 
 function isReleaseCommit(subject, currentTag) {
@@ -240,21 +268,24 @@ async function main() {
   if (currentTag !== process.env.GITHUB_REF_NAME) {
     throw new Error(`Full Changelog ends at ${currentTag}, expected ${process.env.GITHUB_REF_NAME}`);
   }
+  const repository = process.env.GITHUB_REPOSITORY;
+  const token = process.env.GITHUB_TOKEN;
+  // The template names the tag this release compares against. On a fresh fork's
+  // first release that tag does not exist yet, so the comparison is dropped
+  // rather than failing the run.
+  const baseTag = (await tagExists({ repository, tag: previousTag, token })) ? previousTag : '';
   const generatedNotes = await fetchGeneratedNotes({
-    repository: process.env.GITHUB_REPOSITORY,
+    repository,
     tag: currentTag,
-    previousTag,
-    token: process.env.GITHUB_TOKEN
+    previousTag: baseTag,
+    token
   });
-  const directCommits = await fetchDirectCommits({
-    repository: process.env.GITHUB_REPOSITORY,
-    tag: currentTag,
-    previousTag,
-    token: process.env.GITHUB_TOKEN
-  });
+  const directCommits = baseTag
+    ? await fetchDirectCommits({ repository, tag: currentTag, previousTag: baseTag, token })
+    : [];
 
   await fs.writeFile(outputPath, composeReleaseNotes(template, generatedNotes, {
-    repository: process.env.GITHUB_REPOSITORY,
+    repository,
     directCommits
   }));
 }
@@ -276,5 +307,6 @@ module.exports = {
   generatedChangelogDetails,
   generatedNotesWithoutFullChangelog,
   isReleaseCommit,
-  notesWithDirectCommits
+  notesWithDirectCommits,
+  tagExists
 };
