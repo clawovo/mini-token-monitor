@@ -131,7 +131,7 @@ Download from [GitHub Releases](https://github.com/clawovo/mini-token-monitor/re
 Note: this is the fix for macOS reporting "is damaged and can't be opened" — it removes the quarantine flag the system adds to every downloaded app, using a Terminal command.
 
 1. **Open Terminal** — from Launchpad, or Applications > Utilities.
-2. **Paste the command** — copy the line below (**note the trailing space**) but do not press Return yet:
+2. **Paste the command** — copy the line below but do not press Return yet:
 
 ```text
  sudo xattr -r -d com.apple.quarantine /Applications/Mini\ Token\ Monitor.app

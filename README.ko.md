@@ -131,7 +131,7 @@ Qoder CN의 토큰 사용량은 API가 아니라 앱의 로컬 SQLite 데이터�
 설명: Mac에서 "손상되었기 때문에 열 수 없습니다"라고 표시될 때의 해결 방법입니다. 터미널 명령으로 시스템이 다운로드한 앱에 추가한 "격리" 속성을 제거합니다.
 
 1. **터미널 열기**: Launchpad 또는 응용 프로그램 > 유틸리티에서 "터미널"을 엽니다.
-2. **명령 입력**: 아래 명령을 복사합니다(**끝에 공백이 하나 있습니다**). 아직 Return은 누르지 마세요:
+2. **명령 입력**: 아래 명령을 복사합니다. 아직 Return은 누르지 마세요:
 
 ```text
  sudo xattr -r -d com.apple.quarantine /Applications/Mini\ Token\ Monitor.app

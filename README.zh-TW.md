@@ -131,7 +131,7 @@ Qoder CN 的 Token 用量來自應用程式本機 SQLite 資料庫，而非 API 
 說明：Mac 安裝時提示「已損毀，無法打開」的解決方法，透過終端機指令移除系統為下載的應用程式加上的「隔離」標記。
 
 1. **開啟終端機**：在「啟動台」或「應用程式」 > 「工具程式」裡找到並開啟「終端機」。
-2. **輸入指令**：複製以下指令，**注意結尾有一個空格**，先不要按 Enter：
+2. **輸入指令**：複製以下指令，先不要按 Enter：
 
 ```text
  sudo xattr -r -d com.apple.quarantine /Applications/Mini\ Token\ Monitor.app

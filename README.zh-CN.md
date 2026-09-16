@@ -131,7 +131,7 @@ Qoder CN 的 Token 用量来自应用本地 SQLite 数据库，而非 API ——
 说明：Mac安装提示提示“已损坏，无法打开”的解决方法，通过终端命令移除系统给下载的应用添加的“隔离”标记。
 
 1. **打开终端**：在“启动台”或“应用程序” > “实用工具”里找到并打开“终端”。
-2. **输入命令**：复制以下命令，**注意末尾有一个空格**，先不要按回车：
+2. **输入命令**：复制以下命令，先不要按回车：
 
 ```text
  sudo xattr -r -d com.apple.quarantine /Applications/Mini\ Token\ Monitor.app
