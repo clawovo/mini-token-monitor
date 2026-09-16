@@ -586,7 +586,10 @@ function showBarTooltip(bar, ev) {
   const rows = segs.map((s) =>
     `<div class="tt-row"><span class="tt-dot" data-c="${colorFor(s.key)}"></span><span class="tt-name">${s.key}</span><span class="tt-val">${formatCompact(s.value)}</span></div>`
   ).join('');
-  els.tooltip.innerHTML = `<div class="tt-head">${shortDate(bar.label)} · ${formatCompact(bar.total)}</div>${rows}`;
+  els.tooltip.innerHTML = `<div class="tt-head"></div>${rows}`;
+  // Written as text, not markup: the label comes from stored history, and
+  // shortDate() passes a key that is not a date through verbatim.
+  els.tooltip.firstElementChild.textContent = `${shortDate(bar.label)} · ${formatCompact(bar.total)}`;
   applySwatchColors(els.tooltip);
   positionTooltip(ev);
 }
@@ -595,8 +598,10 @@ function showCandleTooltip(c, ev) {
   // Each candle spans a bucket of days: O = first day, C = last day, H/L = busiest/quietest.
   const head = c.endKey && c.endKey !== c.key ? `${longDate(c.key)} – ${longDate(c.endKey)}` : longDate(c.key);
   const ohlc = [['O', c.open], ['H', c.high], ['L', c.low], ['C', c.close]];
-  els.tooltip.innerHTML = `<div class="tt-head">${head}</div>`
+  els.tooltip.innerHTML = '<div class="tt-head"></div>'
     + ohlc.map(([k, v]) => `<div class="tt-row"><span class="tt-name">${k}</span><span class="tt-val">${formatCompact(v)}</span></div>`).join('');
+  // longDate() returns a key that is not a date unchanged, so it is written as text.
+  els.tooltip.firstElementChild.textContent = head;
   positionTooltip(ev);
 }
 
@@ -605,10 +610,12 @@ function showHeatTooltip(date, day, ev) {
   const cost = day ? day.cost : 0;
   const tokLabel = state.locale.startsWith('zh') ? 'Token' : 'Tokens';
   const costLabel = state.locale.startsWith('zh') ? '花費' : 'Cost';
-  let html = `<div class="tt-head">${longDate(date)}</div>`;
+  let html = '<div class="tt-head"></div>';
   html += `<div class="tt-row"><span class="tt-name">${tokLabel}</span><span class="tt-val">${formatCompact(tokens)}</span></div>`;
   if (cost > 0) html += `<div class="tt-row"><span class="tt-name">${costLabel}</span><span class="tt-val">${formatCost(cost)}</span></div>`;
   els.tooltip.innerHTML = html;
+  // longDate() returns a key that is not a date unchanged, so it is written as text.
+  els.tooltip.firstElementChild.textContent = longDate(date);
   positionTooltip(ev);
 }
 
