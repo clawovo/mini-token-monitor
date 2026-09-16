@@ -255,9 +255,14 @@ function normalizeClientName(value) {
   if (raw.includes('dsh')) return 'dsh';
   if (raw.includes('opencode')) return 'opencode';
   if (raw.includes('openclaw') || raw.includes('clawd') || raw.includes('moltbot') || raw.includes('moldbot')) return 'openclaw';
-  // Two anchored passes instead of one alternation: `^-+|-+$` makes the engine
-  // retry the end-anchored branch at every dash run.
-  return raw.replace(/[^a-z0-9_-]+/g, '-').replace(/^-+/, '').replace(/-+$/, '') || null;
+  // Trimmed by index rather than with `-+$`: that pattern is retried at every
+  // position, so a long dash run that does not reach the end costs O(n²).
+  const slug = raw.replace(/[^a-z0-9_-]+/g, '-');
+  let start = 0;
+  let end = slug.length;
+  while (start < end && slug[start] === '-') start += 1;
+  while (end > start && slug[end - 1] === '-') end -= 1;
+  return slug.slice(start, end) || null;
 }
 
 function detectClient(obj) {
