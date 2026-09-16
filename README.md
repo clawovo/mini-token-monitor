@@ -128,6 +128,17 @@ Download from [GitHub Releases](https://github.com/clawovo/mini-token-monitor/re
 - **Windows 10/11** — setup and portable `.exe`, [code-signed](docs/code-signing.md)
 - **Linux x64** — `.AppImage`
 
+Note: this is the fix for macOS reporting "is damaged and can't be opened" — it removes the quarantine flag the system adds to every downloaded app, using a Terminal command.
+
+1. **Open Terminal** — from Launchpad, or Applications > Utilities.
+2. **Paste the command** — copy the line below (**note the trailing space**) but do not press Return yet:
+
+```text
+ sudo xattr -r -d com.apple.quarantine /Applications/Mini\ Token\ Monitor.app
+```
+3. **Run it** — press Return, type your **login password** (nothing is shown while you type), then press Return again.
+4. **Reopen the app** — Mini Token Monitor opens normally once the command finishes.
+
 Packaged builds check GitHub Releases automatically. When an update is available, the app shows an update indicator; supported platforms can also install from Settings → General.
 
 ## App data

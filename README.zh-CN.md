@@ -128,6 +128,17 @@ Qoder CN 的 Token 用量来自应用本地 SQLite 数据库，而非 API ——
 - **Windows 10/11** — 安装版和便携版 `.exe`，均[已签名](docs/code-signing.md)
 - **Linux x64** — `.AppImage`
 
+说明：Mac安装提示提示“已损坏，无法打开”的解决方法，通过终端命令移除系统给下载的应用添加的“隔离”标记。
+
+1. **打开终端**：在“启动台”或“应用程序” > “实用工具”里找到并打开“终端”。
+2. **输入命令**：复制以下命令，**注意末尾有一个空格**，先不要按回车：
+
+```text
+ sudo xattr -r -d com.apple.quarantine /Applications/Mini\ Token\ Monitor.app
+```
+3. **执行命令**：按回车键，然后输入你的**开机密码**（输入时屏幕上不会显示字符），再按回车确认。
+4. **重新打开应用**：命令执行完毕后，就可以正常打开“Mini Token Monitor”了。
+
 打包版会自动检查 GitHub Releases。有新版本时，界面会显示更新提示；受支持的平台也可在 设置 → 常规 中安装更新。
 
 ## App 数据
