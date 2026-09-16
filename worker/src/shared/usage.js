@@ -258,7 +258,9 @@ function normalizeClientName(value) {
   if (raw.includes('dsh')) return 'dsh';
   if (raw.includes('opencode')) return 'opencode';
   if (raw.includes('openclaw') || raw.includes('clawd') || raw.includes('moltbot') || raw.includes('moldbot')) return 'openclaw';
-  return raw.replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || null;
+  // Two anchored passes instead of one alternation: `^-+|-+$` makes the engine
+  // retry the end-anchored branch at every dash run.
+  return raw.replace(/[^a-z0-9_-]+/g, '-').replace(/^-+/, '').replace(/-+$/, '') || null;
 }
 
 function detectClient(obj) {
