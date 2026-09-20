@@ -20,11 +20,11 @@
 
 ## Download
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.0-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.0-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0-x64.dmg)
-- **Windows Installer** — [Mini-Token-Monitor-Setup-0.1.0.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-Setup-0.1.0.exe) (recommended)
-- **Windows Portable** — [Mini-Token-Monitor-0.1.0.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0.exe) (no install required)
-- **Linux x64** — [Mini-Token-Monitor-0.1.0.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.1-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.1-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-x64.dmg)
+- **Windows Installer** — [Mini-Token-Monitor-Setup-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-Setup-0.1.1.exe) (recommended)
+- **Windows Portable** — [Mini-Token-Monitor-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.exe) (no install required)
+- **Linux x64** — [Mini-Token-Monitor-0.1.1.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.AppImage)
 
 <details>
 <summary><strong>First launch and other notes</strong></summary>
@@ -78,11 +78,11 @@ open-source: https://github.com/junhoyeo/tokscale
 
 ## 下载
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.0-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.0-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0-x64.dmg)
-- **Windows 安装版** — [Mini-Token-Monitor-Setup-0.1.0.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-Setup-0.1.0.exe)（推荐）
-- **Windows 便携版** — [Mini-Token-Monitor-0.1.0.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0.exe)（免安装）
-- **Linux x64** — [Mini-Token-Monitor-0.1.0.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.1-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.1-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-x64.dmg)
+- **Windows 安装版** — [Mini-Token-Monitor-Setup-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-Setup-0.1.1.exe)（推荐）
+- **Windows 便携版** — [Mini-Token-Monitor-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.exe)（免安装）
+- **Linux x64** — [Mini-Token-Monitor-0.1.1.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.AppImage)
 
 <details>
 <summary><strong>首次启动与其他说明</strong></summary>
@@ -115,7 +115,7 @@ https://github.com/junhoyeo/tokscale
 ---
 
 <details>
-<summary><strong>Full Changelog:</strong> <a href="https://github.com/clawovo/mini-token-monitor/compare/v0.0.0...v0.1.0">v0.0.0...v0.1.0</a></summary>
+<summary><strong>Full Changelog:</strong> <a href="https://github.com/clawovo/mini-token-monitor/compare/v0.1.0...v0.1.1">v0.1.0...v0.1.1</a></summary>
 
 <!-- github-generated-release-notes -->
 
@@ -149,11 +149,11 @@ https://github.com/junhoyeo/tokscale
 
 ## 下載
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.0-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.0-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0-x64.dmg)
-- **Windows 安裝版** — [Mini-Token-Monitor-Setup-0.1.0.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-Setup-0.1.0.exe)（推薦）
-- **Windows 便攜版** — [Mini-Token-Monitor-0.1.0.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0.exe)（免安裝）
-- **Linux x64** — [Mini-Token-Monitor-0.1.0.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.1-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.1-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-x64.dmg)
+- **Windows 安裝版** — [Mini-Token-Monitor-Setup-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-Setup-0.1.1.exe)（推薦）
+- **Windows 便攜版** — [Mini-Token-Monitor-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.exe)（免安裝）
+- **Linux x64** — [Mini-Token-Monitor-0.1.1.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.AppImage)
 
 </details>
 
@@ -182,11 +182,11 @@ https://github.com/junhoyeo/tokscale
 
 ## 다운로드
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.0-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.0-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0-x64.dmg)
-- **Windows 설치 버전** — [Mini-Token-Monitor-Setup-0.1.0.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-Setup-0.1.0.exe) (권장)
-- **Windows 포터블 버전** — [Mini-Token-Monitor-0.1.0.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0.exe) (설치 필요 없음)
-- **Linux x64** — [Mini-Token-Monitor-0.1.0.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.1-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.1-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-x64.dmg)
+- **Windows 설치 버전** — [Mini-Token-Monitor-Setup-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-Setup-0.1.1.exe) (권장)
+- **Windows 포터블 버전** — [Mini-Token-Monitor-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.exe) (설치 필요 없음)
+- **Linux x64** — [Mini-Token-Monitor-0.1.1.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.AppImage)
 
 </details>
 
@@ -215,11 +215,11 @@ https://github.com/junhoyeo/tokscale
 
 ## ダウンロード
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.0-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.0-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0-x64.dmg)
-- **Windows インストーラー** — [Mini-Token-Monitor-Setup-0.1.0.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-Setup-0.1.0.exe)（推奨）
-- **Windows ポータブル版** — [Mini-Token-Monitor-0.1.0.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0.exe)（インストール不要）
-- **Linux x64** — [Mini-Token-Monitor-0.1.0.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.0/Mini-Token-Monitor-0.1.0.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.1-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.1-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-x64.dmg)
+- **Windows インストーラー** — [Mini-Token-Monitor-Setup-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-Setup-0.1.1.exe)（推奨）
+- **Windows ポータブル版** — [Mini-Token-Monitor-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.exe)（インストール不要）
+- **Linux x64** — [Mini-Token-Monitor-0.1.1.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.AppImage)
 
 </details>
 
