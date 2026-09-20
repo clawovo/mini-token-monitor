@@ -2790,7 +2790,12 @@ function resolveWatchUsePolling(preferred, env = process.env) {
 // TOKEN_MONITOR_WATCH_POLLING=0 opts out: with native events now the default
 // everywhere, suppressing this fallback is the only thing that direction of the
 // override still does.
-const WATCH_DESCRIPTOR_ERROR_CODES = new Set(['ENOSPC', 'EMFILE', 'ENFILE']);
+//
+// ERR_FEATURE_UNAVAILABLE_ON_PLATFORM belongs here for the same reason: the
+// native backend asks for a recursive watch, and on a platform that cannot do one
+// the constructor throws instead of degrading. Both mean "native events are not
+// available on this machine", which is what this fallback is for.
+const WATCH_DESCRIPTOR_ERROR_CODES = new Set(['ENOSPC', 'EMFILE', 'ENFILE', 'ERR_FEATURE_UNAVAILABLE_ON_PLATFORM']);
 
 // Windows only: libuv asserts that the filename ReadDirectoryChangesW hands
 // back starts with the directory string it was given, and calls abort() when it

@@ -69,16 +69,24 @@ class FakeWorker extends EventEmitter {
 }
 FakeWorker.instances = [];
 
-function stubChokidar() {
-  const chokidar = require('chokidar');
-  const original = chokidar.watch;
+function stubWatchBackend() {
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const original = nativeWatcher.createWatchBackend;
   const built = [];
-  chokidar.watch = (dirs, options) => {
-    const instance = { dirs, options, closed: 0, on() { return instance; }, close() { instance.closed += 1; } };
+  nativeWatcher.createWatchBackend = (config = {}) => {
+    const instance = {
+      dirs: config.dirs,
+      // The real backend keeps native and chokidar options in separate fields;
+      // these tests only ever assert on usePolling, which is what picks between them.
+      options: { usePolling: config.usePolling === true },
+      closed: 0,
+      on() { return instance; },
+      close() { instance.closed += 1; }
+    };
     built.push(instance);
     return instance;
   };
-  return { built, restore: () => { chokidar.watch = original; } };
+  return { built, restore: () => { nativeWatcher.createWatchBackend = original; } };
 }
 
 test('the watcher runs in a worker by default', () => {
@@ -94,7 +102,7 @@ test('the watcher runs in a worker by default', () => {
 test('the env override pins the host in-process', () => {
   const saved = process.env[WATCH_HOST_ENV];
   process.env[WATCH_HOST_ENV] = '1';
-  const stub = stubChokidar();
+  const stub = stubWatchBackend();
   try {
     assert.equal(inProcessRequested(), true);
     const host = createWatcherHost({ dirs: ['/tmp/x'], clients: 'claude' }, {});
@@ -127,7 +135,7 @@ test('unref runs after the message listener is attached', () => {
 
 test('a crashing worker falls back only once it has actually exited', async () => {
   FakeWorker.reset();
-  const stub = stubChokidar();
+  const stub = stubWatchBackend();
   const fallbacks = [];
   try {
     const coordinator = createWatcherCoordinator({ Worker: FakeWorker });
@@ -159,7 +167,7 @@ test('a crashing worker falls back only once it has actually exited', async () =
 
 test('an unexpected worker exit falls back too', async () => {
   FakeWorker.reset();
-  const stub = stubChokidar();
+  const stub = stubWatchBackend();
   try {
     const coordinator = createWatcherCoordinator({ Worker: FakeWorker });
     coordinator.acquire({ dirs: ['/tmp/x'], clients: 'claude' }, {});
@@ -174,7 +182,7 @@ test('an unexpected worker exit falls back too', async () => {
 
 test('one failure produces one fallback, not one per event', async () => {
   FakeWorker.reset();
-  const stub = stubChokidar();
+  const stub = stubWatchBackend();
   const fallbacks = [];
   try {
     const coordinator = createWatcherCoordinator({ Worker: FakeWorker });
@@ -196,7 +204,7 @@ test('one failure produces one fallback, not one per event', async () => {
 
 test('an expected exit after terminate is not mistaken for a failure', async () => {
   FakeWorker.reset();
-  const stub = stubChokidar();
+  const stub = stubWatchBackend();
   const fallbacks = [];
   try {
     const coordinator = createWatcherCoordinator({ Worker: FakeWorker });
@@ -258,7 +266,7 @@ test('no replacement worker starts while the old thread is still exiting', async
 
 test('a terminate that never confirms falls back instead of assuming release', async () => {
   FakeWorker.reset();
-  const stub = stubChokidar();
+  const stub = stubWatchBackend();
   const fallbacks = [];
   try {
     const coordinator = createWatcherCoordinator({ Worker: FakeWorker });
@@ -433,7 +441,7 @@ test('close() returns to the caller instead of waiting for chokidar teardown', a
 });
 
 test('the in-process host still honours skipClose', () => {
-  const stub = stubChokidar();
+  const stub = stubWatchBackend();
   try {
     const host = createInProcessWatcherHost({ dirs: ['/tmp/x'], clients: 'claude' }, {});
     host.close({ skipClose: true });

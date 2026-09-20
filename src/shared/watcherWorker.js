@@ -15,8 +15,10 @@
 // keep in sync.
 
 const { parentPort, workerData } = require('node:worker_threads');
-const chokidar = require('chokidar');
 
+// Namespace import: the in-process host's tests swap this export, and a
+// destructured binding would freeze the original in place.
+const nativeWatcher = require('./nativeWatcher');
 const { watcherOptions, watchIgnoreMatcher } = require('./collector');
 
 // Latest-wins rather than a queue. A teardown can run for seconds, and a user
@@ -74,9 +76,14 @@ async function pump() {
       if (target.config) {
         try {
           const { dirs, clients, customScanPaths, usePolling } = target.config;
-          const instance = chokidar.watch(dirs, watcherOptions(usePolling === true, watchIgnoreMatcher(clients, {
-            customScanPaths
-          })));
+          const polling = usePolling === true;
+          const ignored = watchIgnoreMatcher(clients, { customScanPaths });
+          const instance = nativeWatcher.createWatchBackend({
+            dirs,
+            usePolling: polling,
+            ignored,
+            pollingOptions: watcherOptions(polling, ignored)
+          });
           watcher = instance;
           watcherRevision = target.revision;
           appliedRevision = target.revision;

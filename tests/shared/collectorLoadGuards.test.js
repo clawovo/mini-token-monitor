@@ -467,14 +467,14 @@ test('Antigravity source events target its umbrella client without watching sync
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
   let watchedDirs = null;
   let ignored = null;
-  chokidar.watch = (dirs, options) => {
-    watchedDirs = dirs;
-    ignored = options.ignored;
+  nativeWatcher.createWatchBackend = (config = {}) => {
+    watchedDirs = config.dirs;
+    ignored = config.ignored;
     const watcher = {
       on(event, handler) {
         if (event === 'all') watchHandler = handler;
@@ -573,7 +573,7 @@ test('Antigravity source events target its umbrella client without watching sync
     Date.now = originalNow;
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -594,10 +594,10 @@ test('a catch-up that comes due mid-tick keeps its targeted scan scope', async (
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => {
+  nativeWatcher.createWatchBackend = () => {
     const watcher = {
       on(event, handler) {
         if (event === 'all') watchHandler = handler;
@@ -696,7 +696,7 @@ test('a catch-up that comes due mid-tick keeps its targeted scan scope', async (
     Date.now = originalNow;
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -717,10 +717,10 @@ test('a manual refresh satisfies a deferred source sync instead of adding one', 
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => {
+  nativeWatcher.createWatchBackend = () => {
     const watcher = {
       on(event, handler) {
         if (event === 'all') watchHandler = handler;
@@ -783,7 +783,7 @@ test('a manual refresh satisfies a deferred source sync instead of adding one', 
     Date.now = originalNow;
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -805,10 +805,10 @@ test('a failed forced sync hands the source event back instead of eating it', as
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => {
+  nativeWatcher.createWatchBackend = () => {
     const watcher = {
       on(event, handler) {
         if (event === 'all') watchHandler = handler;
@@ -888,7 +888,7 @@ test('a failed forced sync hands the source event back instead of eating it', as
     Date.now = originalNow;
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -910,10 +910,10 @@ test('a source event that keeps failing backs off to the idle cadence', async (t
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => {
+  nativeWatcher.createWatchBackend = () => {
     const watcher = {
       on(event, handler) {
         if (event === 'all') watchHandler = handler;
@@ -985,7 +985,7 @@ test('a source event that keeps failing backs off to the idle cadence', async (t
     Date.now = originalNow;
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -1009,10 +1009,10 @@ test('an unrelated client event does not bypass a source-sync backoff', async ()
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => {
+  nativeWatcher.createWatchBackend = () => {
     const watcher = {
       on(event, handler) {
         if (event === 'all') watchHandler = handler;
@@ -1076,7 +1076,7 @@ test('an unrelated client event does not bypass a source-sync backoff', async ()
     Date.now = originalNow;
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -1303,10 +1303,10 @@ test('an Antigravity CLI event rescans without paying for an IDE sync', async ()
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
   delete process.env.GEMINI_CLI_HOME;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => {
+  nativeWatcher.createWatchBackend = () => {
     const watcher = {
       on(event, handler) {
         if (event === 'all') watchHandler = handler;
@@ -1357,7 +1357,7 @@ test('an Antigravity CLI event rescans without paying for an IDE sync', async ()
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -2677,10 +2677,10 @@ test('a watch event during an in-flight tick re-arms the debounce instead of coa
   const originalSharedDir = process.env.TOKEN_MONITOR_SHARED_DIR;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => ({
+  nativeWatcher.createWatchBackend = () => ({
     on: (event, handler) => { if (event === 'all') watchHandler = handler; },
     close: () => {}
   });
@@ -2740,7 +2740,7 @@ test('a watch event during an in-flight tick re-arms the debounce instead of coa
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -2759,10 +2759,10 @@ test('live watch events scan only changed clients and preserve the other client 
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => {
+  nativeWatcher.createWatchBackend = () => {
     const watcher = {
       on(event, handler) {
         if (event === 'all') watchHandler = handler;
@@ -2902,7 +2902,7 @@ test('live watch events scan only changed clients and preserve the other client 
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -2918,11 +2918,11 @@ test('smart collection uses native watching and skips idle intervals after start
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchOptions = null;
-  chokidar.watch = (_dirs, options) => {
-    watchOptions = options;
+  nativeWatcher.createWatchBackend = (config) => {
+    watchOptions = config.pollingOptions;
     return { on: () => {}, close: () => {} };
   };
 
@@ -2963,7 +2963,7 @@ test('smart collection uses native watching and skips idle intervals after start
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -3263,10 +3263,10 @@ test('smart collection coalesces watch events into one targeted interval tick', 
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => ({
+  nativeWatcher.createWatchBackend = () => ({
     on: (event, handler) => { if (event === 'all') watchHandler = handler; },
     close: () => {}
   });
@@ -3316,7 +3316,7 @@ test('smart collection coalesces watch events into one targeted interval tick', 
     if (handle) handle.stop();
     cursorAuth.runCursorSync = originalRunCursorSync;
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -3332,10 +3332,10 @@ test('smart collection keeps events received during a scan pending', async () =>
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => ({
+  nativeWatcher.createWatchBackend = () => ({
     on: (event, handler) => { if (event === 'all') watchHandler = handler; },
     close: () => {}
   });
@@ -3389,7 +3389,7 @@ test('smart collection keeps events received during a scan pending', async () =>
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -3408,10 +3408,10 @@ test('smart collection retries a failed activity scan on the next interval', asy
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => ({
+  nativeWatcher.createWatchBackend = () => ({
     on: (event, handler) => { if (event === 'all') watchHandler = handler; },
     close: () => {}
   });
@@ -3476,7 +3476,7 @@ test('smart collection retries a failed activity scan on the next interval', asy
     if (handle) handle.stop();
     cursorAuth.runCursorSync = originalRunCursorSync;
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -3509,13 +3509,13 @@ test('watch-descriptor exhaustion degrades to polling and stays there', async ()
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   const watchOptions = [];
   const errorHandlers = [];
   let closed = 0;
-  chokidar.watch = (_dirs, options) => {
-    watchOptions.push(options);
+  nativeWatcher.createWatchBackend = (config) => {
+    watchOptions.push(config.pollingOptions);
     return {
       on: (event, handler) => { if (event === 'error') errorHandlers.push(handler); },
       close: () => { closed += 1; }
@@ -3569,7 +3569,7 @@ test('watch-descriptor exhaustion degrades to polling and stays there', async ()
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -3585,10 +3585,10 @@ test('a successful watcher rebuild clears the current watcher failure', async ()
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchCalls = 0;
-  chokidar.watch = () => {
+  nativeWatcher.createWatchBackend = () => {
     watchCalls += 1;
     if (watchCalls === 1) throw new Error('temporary watcher setup failure');
     return { on: () => {}, close: () => {} };
@@ -3622,7 +3622,7 @@ test('a successful watcher rebuild clears the current watcher failure', async ()
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -3665,11 +3665,11 @@ test('watch roots reach chokidar canonicalised on Windows and untouched elsewher
   os.homedir = () => alias;
   process.env.TOKEN_MONITOR_SHARED_DIR = alias;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchedDirs = null;
-  chokidar.watch = (dirs) => {
-    watchedDirs = dirs;
+  nativeWatcher.createWatchBackend = (config) => {
+    watchedDirs = config.dirs;
     return { on: () => {}, close: () => {} };
   };
 
@@ -3708,7 +3708,7 @@ test('watch roots reach chokidar canonicalised on Windows and untouched elsewher
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -3737,13 +3737,13 @@ test('the ignore matcher agrees with the roots chokidar was actually handed', as
   fs.mkdirSync(hermesHome, { recursive: true });
   process.env.HERMES_HOME = hermesHome;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchedDirs = null;
   let ignored = null;
-  chokidar.watch = (dirs, options) => {
-    watchedDirs = dirs;
-    ignored = options?.ignored;
+  nativeWatcher.createWatchBackend = (config) => {
+    watchedDirs = config.dirs;
+    ignored = config.ignored;
     return { on: () => {}, close: () => {} };
   };
 
@@ -3781,7 +3781,7 @@ test('the ignore matcher agrees with the roots chokidar was actually handed', as
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -3801,12 +3801,12 @@ test('TOKEN_MONITOR_WATCH_POLLING=0 opts out of the descriptor fallback', async 
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
   process.env.TOKEN_MONITOR_WATCH_POLLING = '0';
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   const watchOptions = [];
   const errorHandlers = [];
-  chokidar.watch = (_dirs, options) => {
-    watchOptions.push(options);
+  nativeWatcher.createWatchBackend = (config) => {
+    watchOptions.push(config.pollingOptions);
     return {
       on: (event, handler) => { if (event === 'error') errorHandlers.push(handler); },
       close: () => {}
@@ -3844,7 +3844,7 @@ test('TOKEN_MONITOR_WATCH_POLLING=0 opts out of the descriptor fallback', async 
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -3862,12 +3862,12 @@ test('a non-descriptor watch error is logged without degrading to polling', asyn
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   const watchOptions = [];
   const errorHandlers = [];
-  chokidar.watch = (_dirs, options) => {
-    watchOptions.push(options);
+  nativeWatcher.createWatchBackend = (config) => {
+    watchOptions.push(config.pollingOptions);
     return {
       on: (event, handler) => { if (event === 'error') errorHandlers.push(handler); },
       close: () => {}
@@ -3908,7 +3908,7 @@ test('a non-descriptor watch error is logged without degrading to polling', asyn
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -3927,10 +3927,10 @@ test('live collection retries all clients after a failed targeted watch scan', a
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => ({
+  nativeWatcher.createWatchBackend = () => ({
     on: (event, handler) => { if (event === 'all') watchHandler = handler; },
     close: () => {}
   });
@@ -4003,7 +4003,7 @@ test('live collection retries all clients after a failed targeted watch scan', a
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -4022,9 +4022,9 @@ test('idle smart collection still performs the hourly full reconciliation', asyn
   Date.now = () => nowMs;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
-  chokidar.watch = () => ({ on: () => {}, close: () => {} });
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
+  nativeWatcher.createWatchBackend = () => ({ on: () => {}, close: () => {} });
 
   const childProcess = require('node:child_process');
   const originalSpawn = childProcess.spawn;
@@ -4060,7 +4060,7 @@ test('idle smart collection still performs the hourly full reconciliation', asyn
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     Date.now = originalNow;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
@@ -4080,9 +4080,9 @@ test('hourly smart reconciliation refreshes WSL-only usage without a host event'
   Date.now = () => nowMs;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
-  chokidar.watch = () => ({ on: () => {}, close: () => {} });
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
+  nativeWatcher.createWatchBackend = () => ({ on: () => {}, close: () => {} });
 
   const childProcess = require('node:child_process');
   const originalSpawn = childProcess.spawn;
@@ -4125,7 +4125,7 @@ test('hourly smart reconciliation refreshes WSL-only usage without a host event'
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     Date.now = originalNow;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
@@ -4145,11 +4145,11 @@ test('hourly smart reconciliation starts watching a client directory created aft
   Date.now = () => nowMs;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchCalls = 0;
   let watchHandler = null;
-  chokidar.watch = () => {
+  nativeWatcher.createWatchBackend = () => {
     watchCalls += 1;
     return {
       on: (event, handler) => { if (event === 'all') watchHandler = handler; },
@@ -4200,7 +4200,7 @@ test('hourly smart reconciliation starts watching a client directory created aft
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     Date.now = originalNow;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
@@ -4217,10 +4217,10 @@ test('smart collection lets a successful manual refresh acknowledge existing act
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => ({
+  nativeWatcher.createWatchBackend = () => ({
     on: (event, handler) => { if (event === 'all') watchHandler = handler; },
     close: () => {}
   });
@@ -4262,7 +4262,7 @@ test('smart collection lets a successful manual refresh acknowledge existing act
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -4278,10 +4278,10 @@ test('smart collection acknowledges the latest activity revision after tick coal
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
-  chokidar.watch = () => ({
+  nativeWatcher.createWatchBackend = () => ({
     on: (event, handler) => { if (event === 'all') watchHandler = handler; },
     close: () => {}
   });
@@ -4348,7 +4348,7 @@ test('smart collection acknowledges the latest activity revision after tick coal
   } finally {
     if (handle) handle.stop();
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;
@@ -4660,11 +4660,11 @@ test('the quit variant of stop() skips the watcher walk and leans on `stopped`',
   os.homedir = () => tmp;
   process.env.TOKEN_MONITOR_SHARED_DIR = tmp;
 
-  const chokidar = require('chokidar');
-  const originalWatch = chokidar.watch;
+  const nativeWatcher = require('../../src/shared/nativeWatcher');
+  const originalBackend = nativeWatcher.createWatchBackend;
   let watchHandler = null;
   let closeCalls = 0;
-  chokidar.watch = () => {
+  nativeWatcher.createWatchBackend = () => {
     const watcher = {
       on(event, handler) {
         if (event === 'all') watchHandler = handler;
@@ -4729,7 +4729,7 @@ test('the quit variant of stop() skips the watcher walk and leans on `stopped`',
     if (replaced) replaced.stop();
     if (quitting) quitting.stop({ skipCloseWatchers: true });
     childProcess.spawn = originalSpawn;
-    chokidar.watch = originalWatch;
+    nativeWatcher.createWatchBackend = originalBackend;
     os.homedir = originalHomedir;
     if (originalSharedDir === undefined) delete process.env.TOKEN_MONITOR_SHARED_DIR;
     else process.env.TOKEN_MONITOR_SHARED_DIR = originalSharedDir;

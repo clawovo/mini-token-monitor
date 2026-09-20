@@ -1,15 +1,15 @@
 'use strict';
 
-// Every other watcher test mocks chokidar, which means none of them can tell
-// whether native file events actually arrive on the platform running them.
+// Every other watcher test stubs the watch backend, which means none of them can
+// tell whether native file events actually arrive on the platform running them.
 // That gap is the whole risk in watching without polling: the failure mode is
 // not a crash but silence, and silence looks exactly like an idle machine.
 //
-// So this file talks to the real filesystem with the real production options
-// (watcherOptions, imported rather than restated, so the two cannot drift) and
-// asserts that a write produces an event. CI runs the suite on ubuntu-latest,
-// windows-latest and macos-latest, so this is the check that keeps native
-// events honest on the two platforms the maintainer cannot test by hand.
+// So this file drives the real backend (createWatchBackend, the same factory both
+// production hosts call) against the real filesystem with the real pruning
+// matcher, and asserts that a write produces an event. CI runs the suite on
+// ubuntu-latest, windows-latest and macos-latest, so this is the check that keeps
+// native events honest on the two platforms the maintainer cannot test by hand.
 //
 // It asserts delivery, never latency. A shared CI runner is far too noisy for a
 // timing assertion, and a flaky test in this position would get muted, which
@@ -20,33 +20,33 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const chokidar = require('chokidar');
+const { createWatchBackend } = require('../../src/shared/nativeWatcher');
 
-const { watcherOptions, watchIgnoreMatcher } = require('../../src/shared/collector');
+const { watchIgnoreMatcher } = require('../../src/shared/collector');
 const { installSourceEnvGuard } = require('../helpers/sourceEnv');
 
 installSourceEnvGuard(test);
 
-// awaitWriteFinish holds an event for stabilityThreshold (500 ms) before it is
-// emitted, so the floor is already half a second before any scheduling noise.
-// The bound is generous on purpose: this asserts that events arrive at all, so
-// the only thing a tighter bound buys is a faster failure on a starved runner,
-// at the cost of failing for a reason that has nothing to do with the watcher.
+// The native backend emits as soon as the platform reports a change (the old
+// chokidar path held one back for awaitWriteFinish's 500 ms first), so the floor
+// here is scheduling noise rather than a deliberate delay. The bound is generous
+// on purpose: this asserts that events arrive at all, so the only thing a tighter
+// bound buys is a faster failure on a starved runner, at the cost of failing for
+// a reason that has nothing to do with the watcher.
 const EVENT_TIMEOUT_MS = 45 * 1000;
 
 // Why the writes below are retried rather than done once after `ready`.
 //
-// chokidar's `ready` means "the initial directory scan finished", NOT "the
-// native stream is delivering". A file created between those two moments is
-// reported by neither: ignoreInitial suppresses the scan, and the stream's
-// start point is already past the file's creation. That event is lost for good,
-// while any later write to the same path arrives normally.
+// The platform's native stream and this process attaching to it are not the same
+// instant, and a file created in between is reported by neither. That event is
+// lost for good, while any later write to the same path arrives normally.
 //
-// Measured on darwin with the repro that found this: writing once immediately
-// after `ready` lost the event in 0/120 runs single-process, but 27% of runs
-// with eight watcher processes in parallel — which is what `node --test` does
-// to this file. Every failure had the same shape: no first event, and a second
-// write to the same path delivered ~610 ms later. That is the ~15% CI flake.
+// Measured on darwin with the repro that found this (against the previous
+// chokidar backend, whose `ready` meant "initial scan finished"): writing once
+// immediately after `ready` lost the event in 0/120 runs single-process, but 27%
+// of runs with eight watcher processes in parallel — which is what `node --test`
+// does to this file. Every failure had the same shape: no first event, and a
+// second write to the same path delivered ~610 ms later. That is the ~15% CI flake.
 //
 // Re-touching until an event lands does not weaken anything. A watcher that is
 // genuinely not delivering never produces an event however many times the file
@@ -55,11 +55,10 @@ const EVENT_TIMEOUT_MS = 45 * 1000;
 // the stream is proven live rather than assumed live.
 const TOUCH_INTERVAL_MS = 1500;
 
-// Retrying an individual write is not enough on its own: if the action being
-// tested is `mkdir`, its addDir is what falls into the gap, chokidar never
-// starts watching the new directory, and no amount of writing inside it will
-// ever produce an event. So prove the stream is delivering with a throwaway
-// file first, and only then let the test do what it came to do.
+// Retrying an individual write is not enough on its own: a watcher that never
+// attached, or a directory the tree watcher did not pick up, produces no event
+// however many times the file is written. So prove the stream is delivering with
+// a throwaway file first, and only then let the test do what it came to do.
 //
 // `liveDir` must be a path the watcher is not pruning — for a test that passes
 // an `ignored` matcher, the sentinel goes in a directory that matcher keeps.
@@ -113,9 +112,10 @@ function samePath(left, right) {
 // until its event is observed, so callers never depend on the scan/stream gap.
 async function watchAndCollect(dir, act) {
   const events = [];
-  const options = watcherOptions(false);
-  assert.strictEqual(options.usePolling, false, 'native watcher test must not opt into polling');
-  const watcher = chokidar.watch(dir, options);
+  // This file is the only one that drives a real watcher rather than a stub, so it
+  // is the standing check that the native backend actually delivers events.
+  const watcher = createWatchBackend({ dirs: [dir], usePolling: false, ignored: null });
+  assert.strictEqual(watcher.kind, 'native-recursive', 'this suite must exercise the native backend');
 
   function waitForEvent(predicate, description) {
     return new Promise((resolve, reject) => {
@@ -188,39 +188,39 @@ test('native file events reach a watcher on this platform', async () => {
 test('native file events reach a subdirectory created after the watch started', async () => {
   // The realistic hot path, and the one a per-directory backend can miss:
   // clients write into a fresh project directory (~/.claude/projects/<new>/)
-  // that did not exist when the watcher was built. Neither inotify nor
-  // ReadDirectoryChangesW recurses on its own, so this only works if chokidar
-  // watches the new directory in response to its own addDir event.
+  // that did not exist when the watcher was built. A tree watcher covers it from
+  // the root, but only if the platform keeps reporting paths under the new
+  // directory — which is what this asserts.
+  //
+  // The event NAME is deliberately not asserted. The platform's own flags do not
+  // map onto chokidar's vocabulary (measured on darwin: a modification of a
+  // just-created file arrives as `rename`, not `change`), and the collector reads
+  // the name only as a diagnostic label while attributing clients by path.
   const dir = withTmpDir();
   try {
     const projectDir = path.join(dir, 'a-new-project');
     const sessionPath = path.join(projectDir, 'session.jsonl');
     const events = await watchAndCollect(dir, async ({ waitForEvent }) => {
-      // addDir reports discovery, not completion of the child watcher setup.
-      // Create the first file synchronously right after mkdir — before the
-      // event loop runs — so chokidar's directory scan finds it already
-      // present and emits its add event. Waiting for addDir first (then
-      // writing) lands in the scan-done/sub-watcher-pending window and loses
-      // the add event on platforms with slower watcher setup (Linux/Windows).
       const projectEvent = waitForEvent(
-        (event, filePath) => event === 'addDir' && samePath(filePath, projectDir),
-        'an addDir event for the new project directory'
+        (_event, filePath) => samePath(filePath, projectDir),
+        'an event for the new project directory'
       );
-      const sessionAddedEvent = waitForEvent(
-        (event, filePath) => event === 'add' && samePath(filePath, sessionPath),
-        'an add event for session.jsonl inside the new directory'
+      const sessionEvent = waitForEvent(
+        (_event, filePath) => samePath(filePath, sessionPath),
+        'an event for session.jsonl inside the new directory'
       );
       fs.mkdirSync(projectDir);
       fs.writeFileSync(sessionPath, '{"tokens":1}\n');
       await projectEvent;
-      await sessionAddedEvent;
+      await sessionEvent;
 
-      const sessionChangedEvent = waitForEvent(
-        (event, filePath) => event === 'change' && samePath(filePath, sessionPath),
-        'a change event for session.jsonl inside the new directory'
+      // The stream is still following the new directory, not just announcing it.
+      const appendedEvent = waitForEvent(
+        (_event, filePath) => samePath(filePath, sessionPath),
+        'an event after appending inside the new directory'
       );
       fs.appendFileSync(sessionPath, '{"tokens":2}\n');
-      await sessionChangedEvent;
+      await appendedEvent;
     });
     assert.ok(
       events.some((entry) => path.basename(entry.filePath) === 'session.jsonl'),
@@ -247,10 +247,11 @@ test('native watcher applies bounded pruning without hiding an overlapping recur
     fs.mkdirSync(unrelatedRoot, { recursive: true });
     process.env.CODEX_HOME = opencodeRoot;
     const ignored = watchIgnoreMatcher('opencode,codex');
-    watcher = chokidar.watch(
-      [opencodeRoot, codexRoot],
-      watcherOptions(false, ignored)
-    );
+    watcher = createWatchBackend({
+      dirs: [opencodeRoot, codexRoot],
+      usePolling: false,
+      ignored
+    });
     await new Promise((resolve, reject) => {
       watcher.once('ready', resolve);
       watcher.once('error', reject);

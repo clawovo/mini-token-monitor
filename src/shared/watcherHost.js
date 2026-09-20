@@ -25,6 +25,11 @@
 // thread is worse for latency but still correct. It is also what the collector's
 // watch-behaviour tests drive, since the reaction logic is identical on both.
 
+// Required as a namespace, not destructured: the collector's watch-behaviour tests
+// swap this export to inject events, and a destructured binding would freeze the
+// original in place and make the swap a no-op.
+const nativeWatcher = require('./nativeWatcher');
+
 const WORKER_PATH = require.resolve('./watcherWorker');
 function inProcessRequested(env = process.env) {
   const raw = String(env.TOKEN_MONITOR_WATCH_IN_PROCESS ?? '').trim().toLowerCase();
@@ -33,16 +38,19 @@ function inProcessRequested(env = process.env) {
 }
 
 function createInProcessWatcherHost(config = {}, handlers = {}) {
-  // Required lazily so a worker-hosted run never loads chokidar on the owning
-  // thread, and so the collector's tests can still swap chokidar.watch.
-  const chokidar = require('chokidar');
+  // Required lazily so a worker-hosted run never loads the watcher stack on the
+  // owning thread.
   const { watcherOptions, watchIgnoreMatcher } = require('./collector');
-  const watcher = chokidar.watch(
-    config.dirs,
-    watcherOptions(config.usePolling === true, watchIgnoreMatcher(config.clients, {
-      customScanPaths: config.customScanPaths
-    }))
-  );
+  const usePolling = config.usePolling === true;
+  const ignored = watchIgnoreMatcher(config.clients, {
+    customScanPaths: config.customScanPaths
+  });
+  const watcher = nativeWatcher.createWatchBackend({
+    dirs: config.dirs,
+    usePolling,
+    ignored,
+    pollingOptions: watcherOptions(usePolling, ignored)
+  });
   watcher.on('all', (event, filePath) => handlers.onEvent?.(event, filePath));
   watcher.on('error', (error) => handlers.onError?.(error));
   watcher.on('ready', () => handlers.onReady?.());
