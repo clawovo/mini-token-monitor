@@ -110,7 +110,7 @@ test('Home activity tooltip survives Home rerenders and is dismissed when the vi
   // renderHome replaces the scroller on live stats refreshes. Preserve the pointer point,
   // restore the attached scroller position before measuring the new cell, and repeat the
   // hover restoration after ResizeObserver confirms that layout has settled.
-  const renderHome = rendererSource.match(/function renderHome\(\) \{([\s\S]*?)\n\}\n\nfunction render\(\)/);
+  const renderHome = rendererSource.match(/function renderHome\(options = \{\}\) \{([\s\S]*?)\n\}\n\nfunction render\(options = \{\}\)/);
   assert.ok(renderHome, 'renderHome exists');
   assert.match(renderHome[1], /hideHomeActivityTooltip\(\{\s*preserveHover:\s*true\s*\}\)/);
   assert.match(
@@ -134,7 +134,7 @@ test('Home activity tooltip survives Home rerenders and is dismissed when the vi
     /addEventListener\('scroll',\s*\(\)\s*=>\s*\{[\s\S]*?homeActivityProgrammaticScrollers\.delete\(scroller\)[\s\S]*?homeActivityHoverRestore\?\.\(\)[\s\S]*?hide\(\)/
   );
   // Leaving Home for another view must also dismiss it (the panel is only CSS-hidden).
-  const render = rendererSource.match(/function render\(\) \{([\s\S]*?)\n\}\n\nfunction setStatus/);
+  const render = rendererSource.match(/function render\(options = \{\}\) \{([\s\S]*?)\n\}\n\nfunction setStatus/);
   assert.ok(render, 'render exists');
   assert.match(render[1], /breakdown !== 'home'[\s\S]*?hideHomeActivityTooltip\(\)/);
 });

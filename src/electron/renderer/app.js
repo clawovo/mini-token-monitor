@@ -296,7 +296,7 @@ function normalizeInitialViewValue(value, allowed, fallback) {
   return allowed.has(raw) ? raw : fallback;
 }
 
-const state = { period: normalizeInitialViewValue(initialViewState.period, viewPeriodValues, 'today'), appUpdate: null, breakdown: normalizeInitialViewValue(initialViewState.breakdown, viewBreakdownValues, 'home'), viewSwitcherOpen: false, viewSwitcherHasOpened: false, limitDetailTooltipHasOpened: false, limitDetailTooltipActive: false, limitDetailTooltipRenderPending: false, settings: null, windowVisible: new URLSearchParams(window.location.search).get('windowHidden') !== '1', stats: null, homeHistory: null, homeHistoryBusy: false, homeHistoryRequested: false, homeHistorySignature: '', homeHistoryRetries: 0, homeHistoryRetryTimer: null, homeActivityScrollLeft: null, homeActivityFollowEnd: true, homeActivityResizeObserver: null, serviceStatus: null, serviceStatusBusy: false, serviceProvidersExpanded: false, trendSettingsExpanded: false, trendsActivating: false, homeSettingsExpanded: false, homeLimitSettingsExpanded: false, limitProviderSettingsExpanded: '', clientHealthExpanded: '', clientSources: clientSourceCacheApi.createClientSourceCache(), clientSourcesKey: '', clientSourcesRequest: 0, subscriptionEditingId: '', subscriptionTopUps: [], subscriptionFormBase: null, subscriptionEditorTransitionId: 0, serviceStatusTicker: null, refreshTimer: null, refreshBusy: false, refreshFeedbackTimer: null, currentTotal: 0, rowSignature: '', streamConnected: false, streamFailure: null, mode: 'idle', appInfo: null, systemDarkUi: false, tokscaleStatus: null, tokscaleCheck: null, tokscaleBusy: false, cursorAccount: { status: null, error: '' }, cursorAccountExpanded: false, codexAccountExpanded: false, codexAccountError: '', codexSignInBusy: false, codexSignInFlowId: '', codexLoginUrl: '', codexLoginStatus: '', codexLoginOutput: '', codexWorkspaceChoices: [], codexWorkspaceId: '', codexActiveAccount: null, codexPendingActiveAccount: null, codexPendingActiveAccountUntil: 0, codexPendingActiveAccountTimer: null, codexSystemSwitchingAccountId: '', codexSystemSwitchErrorAccountId: '', codexSystemSwitchError: '', codexSwitchPopoverHasOpened: false, codexSwitchPopoverActive: false, codexSwitchPopoverRenderPending: false, customPricingExpanded: false, claudeAccountExpanded: false, claudePendingCheckSince: 0, opencodeProfileCount: 0, opencodeCookieExpanded: false, openrouterProfileCount: 0, openrouterAccountExpanded: false, thirdPartyProfileCount: 0, thirdPartyAccountExpanded: false, deepseekAccountExpanded: false, deepseekPendingCheckSince: 0, minimaxAccountExpanded: false, minimaxPendingCheckSince: 0, zaiAccountExpanded: false, zaiPendingCheckSince: 0, zaiteamAccountExpanded: false, zaiteamPendingCheckSince: 0, volcengineAccountExpanded: false, volcenginePendingCheckSince: 0, volcengineAgentExpanded: false, qoderAccountExpanded: false, qoderPendingCheckSince: 0, commandcodeAccountExpanded: false, commandcodePendingCheckSince: 0, kimiAccountExpanded: false, kimiPendingCheckSince: 0, ollamaAccountExpanded: false, ollamaPendingCheckSince: 0, mimoAccountExpanded: false, mimoAccountError: '', antigravityAccountExpanded: false, antigravityAccountError: '', antigravitySignInBusy: false, copilotAccountExpanded: false, copilotManualExpanded: false, copilotPendingCheckSince: 0, copilotSignInBusy: false, copilotSignInCancelable: false, copilotSignInFlowId: '', copilotAuthorizeMessage: '', copilotLoginStatus: '', copilotErrorMessage: '', floatingBubble: initialFloatingBubble, suppressInitialNumberAnimation: window.__TOKEN_MONITOR_SUPPRESS_INITIAL_NUMBER_ANIMATION__ === true, openSession: null, detailSort: 'time', toolSearchQuery: '', limitProviderSearchQuery: '' };
+const state = { period: normalizeInitialViewValue(initialViewState.period, viewPeriodValues, 'today'), appUpdate: null, breakdown: normalizeInitialViewValue(initialViewState.breakdown, viewBreakdownValues, 'home'), viewSwitcherOpen: false, viewSwitcherHasOpened: false, limitDetailTooltipHasOpened: false, limitDetailTooltipActive: false, limitDetailTooltipRenderPending: false, settings: null, windowVisible: new URLSearchParams(window.location.search).get('windowHidden') !== '1', stats: null, homeHistory: null, homeHistoryBusy: false, homeHistoryRequested: false, homeHistorySignature: '', homeHistoryRevision: 0, homePanelSignature: '', homeHistoryRetries: 0, homeHistoryRetryTimer: null, homeActivityScrollLeft: null, homeActivityFollowEnd: true, homeActivityResizeObserver: null, serviceStatus: null, serviceStatusBusy: false, serviceProvidersExpanded: false, trendSettingsExpanded: false, trendsActivating: false, homeSettingsExpanded: false, homeLimitSettingsExpanded: false, limitProviderSettingsExpanded: '', clientHealthExpanded: '', clientSources: clientSourceCacheApi.createClientSourceCache(), clientSourcesKey: '', clientSourcesRequest: 0, subscriptionEditingId: '', subscriptionTopUps: [], subscriptionFormBase: null, subscriptionEditorTransitionId: 0, serviceStatusTicker: null, refreshTimer: null, refreshBusy: false, refreshFeedbackTimer: null, currentTotal: 0, rowSignature: '', streamConnected: false, streamFailure: null, mode: 'idle', appInfo: null, systemDarkUi: false, tokscaleStatus: null, tokscaleCheck: null, tokscaleBusy: false, cursorAccount: { status: null, error: '' }, cursorAccountExpanded: false, codexAccountExpanded: false, codexAccountError: '', codexSignInBusy: false, codexSignInFlowId: '', codexLoginUrl: '', codexLoginStatus: '', codexLoginOutput: '', codexWorkspaceChoices: [], codexWorkspaceId: '', codexActiveAccount: null, codexPendingActiveAccount: null, codexPendingActiveAccountUntil: 0, codexPendingActiveAccountTimer: null, codexSystemSwitchingAccountId: '', codexSystemSwitchErrorAccountId: '', codexSystemSwitchError: '', codexSwitchPopoverHasOpened: false, codexSwitchPopoverActive: false, codexSwitchPopoverRenderPending: false, customPricingExpanded: false, claudeAccountExpanded: false, claudePendingCheckSince: 0, opencodeProfileCount: 0, opencodeCookieExpanded: false, openrouterProfileCount: 0, openrouterAccountExpanded: false, thirdPartyProfileCount: 0, thirdPartyAccountExpanded: false, deepseekAccountExpanded: false, deepseekPendingCheckSince: 0, minimaxAccountExpanded: false, minimaxPendingCheckSince: 0, zaiAccountExpanded: false, zaiPendingCheckSince: 0, zaiteamAccountExpanded: false, zaiteamPendingCheckSince: 0, volcengineAccountExpanded: false, volcenginePendingCheckSince: 0, volcengineAgentExpanded: false, qoderAccountExpanded: false, qoderPendingCheckSince: 0, commandcodeAccountExpanded: false, commandcodePendingCheckSince: 0, kimiAccountExpanded: false, kimiPendingCheckSince: 0, ollamaAccountExpanded: false, ollamaPendingCheckSince: 0, mimoAccountExpanded: false, mimoAccountError: '', antigravityAccountExpanded: false, antigravityAccountError: '', antigravitySignInBusy: false, copilotAccountExpanded: false, copilotManualExpanded: false, copilotPendingCheckSince: 0, copilotSignInBusy: false, copilotSignInCancelable: false, copilotSignInFlowId: '', copilotAuthorizeMessage: '', copilotLoginStatus: '', copilotErrorMessage: '', floatingBubble: initialFloatingBubble, suppressInitialNumberAnimation: window.__TOKEN_MONITOR_SUPPRESS_INITIAL_NUMBER_ANIMATION__ === true, openSession: null, detailSort: 'time', toolSearchQuery: '', limitProviderSearchQuery: '' };
 state.zedAccountExpanded = false;
 state.zedPendingCheckSince = 0;
 state.toolDetailMode = 'tokens';
@@ -7153,6 +7153,7 @@ async function loadHomeHistory() {
     });
     if (outcome.accepted) {
       state.homeHistory = fetchedHistory;
+      state.homeHistoryRevision += 1;
       state.homeHistoryLoadedSignature = requestSignature;
       state.homeHistoryRetries = 0;
       state.homeHistoryRetrySignature = '';
@@ -8278,18 +8279,45 @@ function renderHomeTrendsModule() {
   return module;
 }
 
-function renderHome() {
+// Home rebuilds every module — charts and heatmap included — on every stats push,
+// and a push arrives every refreshMs (default 15s) while the data behind it only
+// changes on the collector's own cadence (5 min usage, 5 min limits, 15 min
+// history). So most pushes rebuild identical output. This fingerprints everything
+// the Home panel renders from so an unchanged push can reuse the live DOM.
+//
+// A new input to ANY Home module must be added here, or that module can show a
+// stale value until the next real change. The list is deliberately generous:
+// including an input a module ignores costs one rebuild, missing one it uses is a
+// user-visible bug. Pinned by tests/electron/homeRenderSignature.test.js.
+function homeRenderSignature(moduleIds, period) {
+  const settings = state.settings || {};
+  const stats = state.stats || {};
+  return JSON.stringify([
+    moduleIds,
+    [state.period, state.breakdown, state.detailSort, state.toolSearchQuery, state.limitProviderSearchQuery, state.openSession?.id || null],
+    [state.trendsActivating, state.systemDarkUi, state.periodMotionActive],
+    // Any load of the dashboard history replaces what the heatmap and trend line show.
+    [state.homeHistoryRevision, state.homeHistoryLoadedSignature],
+    stats.updatedAt || '',
+    period,
+    stats.historyPreview || null,
+    stats.devices || null,
+    stats.limits || null,
+    [currentLocale(), currentCurrency(), settings.currencyRatesEffective || null],
+    [settings.themeColors || null, settings.vendorColors || null, toolIconsEnabled(settings.showToolIcons)],
+    [settings.compactTokenUnits || null, settings.heatmapMetric || null, settings.modelRankingMetric || null, settings.homeActiveDaysWindow || null],
+    [settings.showHomeLimitBars, settings.showHomeLimitProviderNames, settings.homeLimitProviderOrder || null, settings.hiddenHomeLimitProviders || null, settings.homeLimitAccountCount],
+    [settings.historyEnabled, settings.homeModuleOrder || null, settings.clients || null]
+  ]);
+}
+
+function renderHome(options = {}) {
   if (!els.homePanel) return;
-  // The previous scroller (and its ResizeObserver) is about to be replaced; drop the
-  // observer so at most one is live. Keep the active tooltip visible while the
-  // replacement heatmap reconnects it to the same date cell.
-  hideHomeActivityTooltip({ preserveHover: true });
-  state.homeActivityResizeObserver?.disconnect();
-  state.homeActivityResizeObserver = null;
   const period = state.stats.periods?.[state.period] || { totalTokens: 0, costUsd: 0, clients: {} };
   const moduleIds = homeModuleIds();
   if (moduleIds.includes('trends')) void loadHomeHistory();
   if (moduleIds.length === 0) {
+    state.homePanelSignature = '';
     const empty = document.createElement('div');
     empty.className = 'home-empty';
     const title = document.createElement('div');
@@ -8308,6 +8336,20 @@ function renderHome() {
     hideHomeActivityTooltip();
     return;
   }
+  // Nothing Home renders from has changed: keep the live DOM so scroll position,
+  // hover state and the activity ResizeObserver all survive the periodic refresh.
+  // Only the scheduled stats refresh opts into this — an interaction-driven render
+  // always repaints, so a presentation change that is not part of the signature can
+  // never leave Home stale behind a reused node.
+  const signature = homeRenderSignature(moduleIds, period);
+  if (options.reuseUnchanged === true && signature === state.homePanelSignature && els.homePanel.firstElementChild) return;
+  state.homePanelSignature = signature;
+  // The previous scroller (and its ResizeObserver) is about to be replaced; drop the
+  // observer so at most one is live. Keep the active tooltip visible while the
+  // replacement heatmap reconnects it to the same date cell.
+  hideHomeActivityTooltip({ preserveHover: true });
+  state.homeActivityResizeObserver?.disconnect();
+  state.homeActivityResizeObserver = null;
   const nodes = moduleIds.map((id) => {
     if (id === 'limits') return renderHomeLimitModule();
     if (id === 'tool') return renderHomeToolModule(period);
@@ -8329,7 +8371,7 @@ function renderHome() {
   // ResizeObserver repeats the scroll + hover restoration once layout fully settles.
 }
 
-function render() {
+function render(options = {}) {
   const surface = visibleStatsSurface();
   if (surface !== 'main') {
     if (!surface) statsRenderScheduler.request();
@@ -8420,7 +8462,7 @@ function render() {
     els.trendsPanel.classList.add('hidden');
     els.limitsPanel.classList.add('hidden');
     els.homePanel.classList.remove('hidden');
-    renderHome();
+    renderHome(options);
   } else if (state.breakdown === 'limits') {
     els.homePanel.classList.add('hidden');
     els.breakdown.classList.add('hidden');
@@ -13091,7 +13133,9 @@ function renderStatsUpdate() {
     return;
   }
   if (surface !== 'main') return;
-  render();
+  // Periodic/push-driven path: reuse Home when nothing it renders from changed.
+  // Interaction-driven renders call render() directly and always repaint.
+  render({ reuseUnchangedHome: true });
   if (!isSettingsSurfaceVisible()) return;
   renderCodexAccounts();
   renderSettingsSummaries();

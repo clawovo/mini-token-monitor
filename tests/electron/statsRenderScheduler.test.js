@@ -257,7 +257,7 @@ test('leaving Settings no longer needs a catch-up repaint', () => {
 test('stats-derived Settings rows refresh behind an open panel', () => {
   const app = fs.readFileSync(path.join(rendererDir, 'app.js'), 'utf8');
   const renderBody = app.slice(
-    app.indexOf('function render() {'),
+    app.indexOf('function render(options = {}) {'),
     app.indexOf('\nfunction setStatus(')
   );
   const archiveBody = app.slice(

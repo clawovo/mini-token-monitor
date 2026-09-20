@@ -2187,11 +2187,17 @@ test('watchIgnoreMatcher prunes the Hermes runtime but keeps the state.db family
     const { watchIgnoreMatcher } = freshCollector();
     const ignored = watchIgnoreMatcher('claude,hermes');
     const hermes = path.join(tmp, '.hermes');
-    // The watch root itself and the db family are kept.
+    // The watch root itself and the write signals are kept.
     assert.equal(ignored(hermes), false);
     assert.equal(ignored(path.join(hermes, 'state.db')), false);
     assert.equal(ignored(path.join(hermes, 'state.db-wal')), false);
-    assert.equal(ignored(path.join(hermes, 'state.db-shm')), false);
+    // -shm is SQLite's shared-memory index, not a write signal: the Hermes gateway
+    // churns it continuously (locks/attachments) with no usage behind it, so it is
+    // pruned to keep those events from scheduling rescans.
+    assert.equal(ignored(path.join(hermes, 'state.db-shm')), true);
+    // Other noisy siblings the gateway also writes are pruned by the same rule.
+    assert.equal(ignored(path.join(hermes, 'kanban.db-shm')), true);
+    assert.equal(ignored(path.join(hermes, 'cron', '.tick.lock')), true);
     // The runtime / logs / cache under ~/.hermes are pruned (never recursed).
     assert.equal(ignored(path.join(hermes, 'hermes-agent')), true);
     assert.equal(ignored(path.join(hermes, 'hermes-agent', 'node_modules')), true);
@@ -2226,11 +2232,11 @@ test('watchIgnoreMatcher keeps profile dirs and their db family so profile chang
     delete process.env.HERMES_HOME;
     const { watchIgnoreMatcher } = freshCollector();
     const ignored = watchIgnoreMatcher('hermes');
-    // The profile dir (an explicit watch root) and its db family stay watched.
+    // The profile dir (an explicit watch root) and its write signals stay watched.
     assert.equal(ignored(profileDir), false);
     assert.equal(ignored(path.join(profileDir, 'state.db')), false);
     assert.equal(ignored(path.join(profileDir, 'state.db-wal')), false);
-    assert.equal(ignored(path.join(profileDir, 'state.db-shm')), false);
+    assert.equal(ignored(path.join(profileDir, 'state.db-shm')), true);
     // Junk inside a profile dir is still pruned.
     assert.equal(ignored(path.join(profileDir, 'logs')), true);
   } finally {

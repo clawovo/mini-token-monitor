@@ -2079,13 +2079,22 @@ function clientsForWatchPath(filePath, rootsByClient) {
 // Inside a Hermes home dir tokscale only reads the SQLite db; the rest is the
 // Desktop App runtime (hermes-agent/node_modules/venv, logs, cache — 150k+ files
 // for some users). A plain recursive watch of ~/.hermes pegged CPU at 100%+
-// (issue #38). Watching the db files directly instead would miss the WAL/SHM
-// sidecars Hermes creates after startup (no seconds-level refresh on a cold
-// start), so we keep watching the dir but hand chokidar an `ignored` matcher
-// that prunes everything under a Hermes home except the db family. chokidar
-// never recurses into an ignored dir (so the runaway poll is gone), yet a
-// newly created state.db-wal is still seen on the next top-level readdir.
-const HERMES_DB_FILES = new Set(['state.db', 'state.db-wal', 'state.db-shm']);
+// (issue #38). Watching the db files directly instead would miss the WAL sidecar
+// Hermes creates after startup (no seconds-level refresh on a cold start), so we
+// keep watching the dir but hand chokidar an `ignored` matcher that prunes
+// everything under a Hermes home except the write signals below. chokidar never
+// recurses into an ignored dir (so the runaway poll is gone), yet a newly created
+// state.db-wal is still seen on the next top-level readdir.
+//
+// state.db-shm is deliberately NOT watched. It is SQLite's shared-memory index: it
+// changes when a connection attaches or a lock is taken, not when a row is written,
+// and the Hermes gateway holds a connection open with its cron ticker running — so
+// the shm file changes continuously (measured ~148 events/min on a live machine)
+// while no token usage moves behind it, turning each one into a debounced rescan.
+// The main db and its WAL still carry the real writes, and the 5-minute full tick is
+// the floor. opencode keeps its -shm watched on purpose: it writes in bursts and can
+// commit through WAL without checkpointing, which is a different write pattern.
+const HERMES_DB_FILES = new Set(['state.db', 'state.db-wal']);
 // OpenClaw keeps each agent's usage sources in a small set of lanes under
 // ~/.openclaw/agents/<agentId>: legacy/published JSONL under sessions/, doctor
 // migration archives beside it, the current per-agent SQLite store, and Codex
