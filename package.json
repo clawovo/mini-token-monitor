@@ -1,7 +1,7 @@
 {
   "name": "mini-token-monitor",
   "productName": "Mini Token Monitor",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Mini Token Monitor — a local-first live token & cost widget for Claude Code, Codex & Hermes.",
   "main": "src/electron/main.js",
   "scripts": {

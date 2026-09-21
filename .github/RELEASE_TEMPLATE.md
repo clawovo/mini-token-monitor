@@ -4,27 +4,19 @@
 
 <!-- app-update-notes:en:start -->
 ### Added
-- **Custom scan paths:** Adds extra session folders for supported tools through **Settings → Collection → expand a tool → Add path**, covering records outside the default locations. (#674)
-- **Session activity and projects:** Adds activity times across discoverable sessions and project attribution when the workspace folder can be identified. (#676)
-- **Factory Droid usage:** Supports token usage from Droid CLI and Factory desktop sessions. (#682)
-- **Volcengine Agent Plan:** Reads personal Agent Plan quotas automatically from the locally signed-in arkcli account on this computer when explicit Volcengine credentials are not configured. (#655)
+- **Penguin Harness usage:** Reads token usage from a locally installed [Penguin Harness](https://github.com/Prism-Shadow/penguin-harness) (`web.db`). Off by default — enable it under **Settings → Collection**. If you run the dev build, point `PENGUIN_HOME` at its data root. (#118772c)
 
 ### Improved
-- **Hub sync bandwidth:** Reduces repeated full statistics transfers for Node and Cloudflare Worker Hubs while keeping older clients compatible. (#649)
-
-### Fixed
-- **Codex scheduled resets:** Shows an announced reset schedule instead of leaving the earlier forecast visible. (#679)
-- **DeepSeek Harness sessions on Windows:** Switches to the latest versioned transcript even when it is created rapidly, so usage and details do not remain pinned to older data. (#680)
-- **Pi-family sessions:** Avoids double-counting copied responses across forked or continued Pi, Senpi, and Omp session files.
+- **Much lower power consumption:** The file watcher now uses the operating system's recursive notifications instead of one handle per file, and the dashboard only repaints when something it shows has actually changed. Measured on a machine with a large local history, the main process's idle CPU fell from roughly 8% to well under 1%, and its open file descriptors from about 2,900 to about 130. (#b8b8251, #cb43c78)
 <!-- app-update-notes:en:end -->
 
 ## Download
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.1-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.1-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-x64.dmg)
-- **Windows Installer** — [Mini-Token-Monitor-Setup-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-Setup-0.1.1.exe) (recommended)
-- **Windows Portable** — [Mini-Token-Monitor-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.exe) (no install required)
-- **Linux x64** — [Mini-Token-Monitor-0.1.1.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.2-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.2-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2-x64.dmg)
+- **Windows Installer** — [Mini-Token-Monitor-Setup-0.1.2.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-Setup-0.1.2.exe) (recommended)
+- **Windows Portable** — [Mini-Token-Monitor-0.1.2.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2.exe) (no install required)
+- **Linux x64** — [Mini-Token-Monitor-0.1.2.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2.AppImage)
 
 <details>
 <summary><strong>First launch and other notes</strong></summary>
@@ -62,27 +54,19 @@ open-source: https://github.com/junhoyeo/tokscale
 
 <!-- app-update-notes:zh:start -->
 ### 新增
-- **自定义扫描路径：** 可通过**“设置”→“采集”→展开工具→“添加路径”**为支持的工具添加额外 session 文件夹，读取不在默认位置的记录。（#674）
-- **会话时间与项目：** 为可发现的会话补充活动时间；能识别工作区文件夹时，也会归入对应项目。（#676）
-- **Factory Droid 用量：** 支持统计 Droid CLI 与 Factory 桌面版 session 的 Token 用量。（#682）
-- **Volcengine Agent Plan：** 未配置 Volcengine 凭据时，可自动读取本机 arkcli 当前登录个人账号的 Agent Plan 额度。（#655）
+- **Penguin Harness 用量采集：** 可读取本机安装的 [Penguin Harness](https://github.com/Prism-Shadow/penguin-harness) 的 Token 用量（`web.db`）。默认关闭，可在**“设置”→“采集”**中开启。若你跑的是 dev 版本，可用 `PENGUIN_HOME` 指向它的数据目录。（#118772c）
 
 ### 改进
-- **Hub 同步流量：** 减少 Node 与 Cloudflare Worker Hub 重复传输完整统计数据，同时保持旧版客户端兼容。（#649）
-
-### 修复
-- **Codex 计划重置：** 收到重置排期公告后会显示该排期，不再停留在先前的预测状态。（#679）
-- **Windows DeepSeek Harness 会话：** 快速生成版本化对话记录时也会切换到最新记录，避免用量与详情停留在旧数据。（#680）
-- **Pi 系列会话：** Pi、Senpi 与 Omp 分叉或续接 session 文件中的已复制响应不再重复计入用量。
+- **大幅降低耗电：** 文件监听改用系统原生的递归通知，不再为每个文件单独挂一个句柄；仪表盘也只在真正显示的内容发生变化时才重绘。在一台本地历史很大的机器上实测，主进程空闲 CPU 从约 8% 降到远低于 1%，打开的文件描述符从约 2900 降到约 130。（#b8b8251、#cb43c78）
 <!-- app-update-notes:zh:end -->
 
 ## 下载
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.1-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.1-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-x64.dmg)
-- **Windows 安装版** — [Mini-Token-Monitor-Setup-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-Setup-0.1.1.exe)（推荐）
-- **Windows 便携版** — [Mini-Token-Monitor-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.exe)（免安装）
-- **Linux x64** — [Mini-Token-Monitor-0.1.1.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.2-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.2-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2-x64.dmg)
+- **Windows 安装版** — [Mini-Token-Monitor-Setup-0.1.2.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-Setup-0.1.2.exe)（推荐）
+- **Windows 便携版** — [Mini-Token-Monitor-0.1.2.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2.exe)（免安装）
+- **Linux x64** — [Mini-Token-Monitor-0.1.2.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2.AppImage)
 
 <details>
 <summary><strong>首次启动与其他说明</strong></summary>
@@ -115,7 +99,7 @@ https://github.com/junhoyeo/tokscale
 ---
 
 <details>
-<summary><strong>Full Changelog:</strong> <a href="https://github.com/clawovo/mini-token-monitor/compare/v0.1.0...v0.1.1">v0.1.0...v0.1.1</a></summary>
+<summary><strong>Full Changelog:</strong> <a href="https://github.com/clawovo/mini-token-monitor/compare/v0.1.1...v0.1.2">v0.1.1...v0.1.2</a></summary>
 
 <!-- github-generated-release-notes -->
 
@@ -133,27 +117,19 @@ https://github.com/junhoyeo/tokscale
 
 <!-- app-update-notes:zh-TW:start -->
 ### 新增
-- **自訂掃描路徑：** 可透過**「設定」→「採集」→展開工具→「新增路徑」**為支援的工具加入額外 session 資料夾，讀取不在預設位置的記錄。（#674）
-- **工作階段時間與專案：** 為可找到的工作階段補上活動時間；能識別工作區資料夾時，也會歸入對應專案。（#676）
-- **Factory Droid 用量：** 支援統計 Droid CLI 與 Factory 桌面版 session 的 Token 用量。（#682）
-- **Volcengine Agent Plan：** 未設定 Volcengine 憑證時，可自動讀取本機 arkcli 目前登入個人帳號的 Agent Plan 額度。（#655）
+- **Penguin Harness 用量採集：** 可讀取本機安裝的 [Penguin Harness](https://github.com/Prism-Shadow/penguin-harness) 的 Token 用量（`web.db`）。預設關閉，可在**「設定」→「採集」**中開啟。若你跑的是 dev 版本，可用 `PENGUIN_HOME` 指向它的資料目錄。（#118772c）
 
 ### 改進
-- **Hub 同步流量：** 減少 Node 與 Cloudflare Worker Hub 重複傳輸完整統計資料，同時保持舊版用戶端相容。（#649）
-
-### 修復
-- **Codex 排程重設：** 收到重設排程公告後會顯示該排程，不再停留在先前的預測狀態。（#679）
-- **Windows DeepSeek Harness 工作階段：** 快速產生版本化對話記錄時也會切換至最新記錄，避免用量與詳情停留在舊資料。（#680）
-- **Pi 系列工作階段：** Pi、Senpi 與 Omp 分支或接續 session 檔案中的已複製回應不再重複計入用量。
+- **大幅降低耗電：** 檔案監聽改用系統原生的遞迴通知，不再為每個檔案單獨掛一個句柄；儀表板也只在真正顯示的內容改變時才重繪。在一台本機歷史很大的機器上實測，主程序閒置 CPU 從約 8% 降到遠低於 1%，開啟的檔案描述符從約 2900 降到約 130。（#b8b8251、#cb43c78）
 <!-- app-update-notes:zh-TW:end -->
 
 ## 下載
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.1-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.1-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-x64.dmg)
-- **Windows 安裝版** — [Mini-Token-Monitor-Setup-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-Setup-0.1.1.exe)（推薦）
-- **Windows 便攜版** — [Mini-Token-Monitor-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.exe)（免安裝）
-- **Linux x64** — [Mini-Token-Monitor-0.1.1.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.2-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.2-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2-x64.dmg)
+- **Windows 安裝版** — [Mini-Token-Monitor-Setup-0.1.2.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-Setup-0.1.2.exe)（推薦）
+- **Windows 便攜版** — [Mini-Token-Monitor-0.1.2.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2.exe)（免安裝）
+- **Linux x64** — [Mini-Token-Monitor-0.1.2.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2.AppImage)
 
 </details>
 
@@ -166,27 +142,19 @@ https://github.com/junhoyeo/tokscale
 
 <!-- app-update-notes:ko:start -->
 ### 추가
-- **사용자 지정 스캔 경로:** **설정 → 수집 → 도구 펼치기 → 경로 추가**에서 지원 도구별로 세션 폴더를 추가하여 기본 위치 밖의 기록을 읽을 수 있습니다. (#674)
-- **세션 시간 및 프로젝트:** 탐색 가능한 세션에 활동 시간을 표시하고, 작업 공간 폴더를 식별할 수 있으면 해당 프로젝트에 연결합니다. (#676)
-- **Factory Droid 사용량:** Droid CLI와 Factory 데스크톱 세션의 토큰 사용량을 지원합니다. (#682)
-- **Volcengine Agent Plan:** Volcengine 자격 증명을 직접 설정하지 않은 경우 이 컴퓨터의 arkcli에 로그인된 개인 계정에서 Agent Plan 할당량을 자동으로 읽습니다. (#655)
+- **Penguin Harness 사용량 수집:** 이 컴퓨터에 설치된 [Penguin Harness](https://github.com/Prism-Shadow/penguin-harness)의 토큰 사용량(`web.db`)을 읽습니다. 기본은 꺼짐이며 **설정 → 수집**에서 켭니다. dev 빌드를 쓰는 경우 `PENGUIN_HOME`으로 데이터 루트를 지정하세요. (#118772c)
 
 ### 개선
-- **Hub 동기화 트래픽:** 이전 클라이언트 호환성을 유지하면서 Node 및 Cloudflare Worker Hub의 반복적인 전체 통계 전송을 줄였습니다. (#649)
-
-### 수정
-- **Codex 예약 리셋:** 리셋 일정이 공지되면 이전 예측 대신 공지된 일정을 표시합니다. (#679)
-- **Windows의 DeepSeek Harness 세션:** 버전이 지정된 대화 기록이 빠르게 생성되어도 최신 기록으로 전환되어 사용량과 상세 정보가 이전 데이터에 머무르지 않습니다. (#680)
-- **Pi 계열 세션:** 포크하거나 이어서 진행한 Pi, Senpi 및 Omp 세션 파일에 복사된 응답이 중복 집계되지 않습니다.
+- **전력 소모 대폭 감소:** 파일 감시가 파일마다 핸들을 여는 대신 운영체제의 재귀 알림을 사용하고, 대시보드도 실제로 표시되는 내용이 바뀔 때만 다시 그립니다. 로컬 기록이 많은 컴퓨터에서 측정했을 때 기본 프로세스의 유휴 CPU가 약 8%에서 1% 미만으로, 열린 파일 디스크립터가 약 2900개에서 약 130개로 줄었습니다. (#b8b8251, #cb43c78)
 <!-- app-update-notes:ko:end -->
 
 ## 다운로드
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.1-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.1-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-x64.dmg)
-- **Windows 설치 버전** — [Mini-Token-Monitor-Setup-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-Setup-0.1.1.exe) (권장)
-- **Windows 포터블 버전** — [Mini-Token-Monitor-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.exe) (설치 필요 없음)
-- **Linux x64** — [Mini-Token-Monitor-0.1.1.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.2-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.2-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2-x64.dmg)
+- **Windows 설치 버전** — [Mini-Token-Monitor-Setup-0.1.2.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-Setup-0.1.2.exe) (권장)
+- **Windows 포터블 버전** — [Mini-Token-Monitor-0.1.2.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2.exe) (설치 필요 없음)
+- **Linux x64** — [Mini-Token-Monitor-0.1.2.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2.AppImage)
 
 </details>
 
@@ -199,27 +167,19 @@ https://github.com/junhoyeo/tokscale
 
 <!-- app-update-notes:ja:start -->
 ### 追加
-- **カスタムスキャンパス：** **設定 → 収集 → ツールを展開 → パスを追加**から、対応ツールごとに追加のセッションフォルダーを指定し、既定の場所にない記録を読み込めます。（#674）
-- **セッション時刻とプロジェクト：** 検出可能なセッションにアクティビティ時刻を表示し、ワークスペースフォルダーを識別できる場合は該当プロジェクトに関連付けます。（#676）
-- **Factory Droid の使用量：** Droid CLI と Factory デスクトップのセッションで Token 使用量を集計できます。（#682）
-- **Volcengine Agent Plan：** Volcengine の認証情報を明示的に設定していない場合、このコンピューターで arkcli にログイン中の個人アカウントから Agent Plan のクォータを自動取得します。（#655）
+- **Penguin Harness の使用量収集:** このコンピューターにインストールされた [Penguin Harness](https://github.com/Prism-Shadow/penguin-harness) のトークン使用量（`web.db`）を読み取ります。既定ではオフで、**設定 → 収集** で有効にします。dev ビルドを使っている場合は `PENGUIN_HOME` でデータルートを指定します。（#118772c）
 
 ### 改善
-- **Hub 同期トラフィック：** 旧バージョンのクライアントとの互換性を保ちながら、Node および Cloudflare Worker Hub による完全な統計データの重複送信を減らしました。（#649）
-
-### 修正
-- **Codex の予定リセット：** リセット予定が告知されると、以前の予測ではなく告知された予定を表示します。（#679）
-- **Windows の DeepSeek Harness セッション：** バージョン付きの会話記録が短時間に作成されても最新の記録へ切り替わり、使用量や詳細が古いデータのまま残りません。（#680）
-- **Pi 系セッション：** フォークまたは継続した Pi、Senpi、Omp のセッションファイルにコピーされた応答を重複計上しません。
+- **消費電力を大幅に削減:** ファイル監視がファイルごとにハンドルを開く方式をやめ、OS 標準の再帰通知を使うようになりました。ダッシュボードも実際に表示内容が変わったときだけ再描画します。ローカル履歴が大きいマシンでの実測で、メインプロセスの待機時 CPU が約 8% から 1% 未満に、開いているファイルディスクリプタが約 2900 から約 130 に減りました。（#b8b8251、#cb43c78）
 <!-- app-update-notes:ja:end -->
 
 ## ダウンロード
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.1-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.1-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1-x64.dmg)
-- **Windows インストーラー** — [Mini-Token-Monitor-Setup-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-Setup-0.1.1.exe)（推奨）
-- **Windows ポータブル版** — [Mini-Token-Monitor-0.1.1.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.exe)（インストール不要）
-- **Linux x64** — [Mini-Token-Monitor-0.1.1.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.1/Mini-Token-Monitor-0.1.1.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.2-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.2-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2-x64.dmg)
+- **Windows インストーラー** — [Mini-Token-Monitor-Setup-0.1.2.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-Setup-0.1.2.exe)（推奨）
+- **Windows ポータブル版** — [Mini-Token-Monitor-0.1.2.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2.exe)（インストール不要）
+- **Linux x64** — [Mini-Token-Monitor-0.1.2.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.2/Mini-Token-Monitor-0.1.2.AppImage)
 
 </details>
 

@@ -615,8 +615,13 @@ test('release template exposes marked summaries for every bundled locale', () =>
   assert.match(template, /## 繁體中文[\s\S]*## 下載/);
   assert.match(template, /## 한국어[\s\S]*## 다운로드/);
   assert.match(template, /## 日本語[\s\S]*## ダウンロード/);
-  assert.match(template, /\(#\d+(?:, #\d+)*\)/);
-  assert.match(template, /（#\d+(?:、#\d+)*）/);
+  // Every item cites what produced it. This fork lands work directly on main
+  // rather than through pull requests, so a reference may name a commit as well
+  // as an upstream PR.
+  assert.match(template, /\(#(?:[0-9a-f]{7,}|\d+)(?:, #(?:[0-9a-f]{7,}|\d+))*\)/);
+  // Same reasoning as the ASCII form above: a fork without pull requests cites
+  // the commit, so a hexadecimal reference is accepted alongside a PR number.
+  assert.match(template, /（#(?:[0-9a-f]{7,}|\d+)(?:、(?:#(?:[0-9a-f]{7,}|\d+)))*）/);
 });
 
 test('mergeLatestReleaseMetadata preserves notes when native updater metadata omits them', () => {
