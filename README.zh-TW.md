@@ -16,7 +16,7 @@
 
 ## 什麼是 Mini Token Monitor？
 
-一款選單列小工具，即時顯示 Claude Code、Codex、Cursor、GitHub Copilot、Cherry Studio 等 36+ 種 AI 編程工具的 Token 用量與 AI 工具額度，具備即時趨勢功能，並支援依工具、模型、session 或專案分項顯示。
+一款選單列小工具，即時顯示 Claude Code、Codex、Cursor、GitHub Copilot、Cherry Studio 等 37+ 種 AI 編程工具的 Token 用量與 AI 工具額度，具備即時趨勢功能，並支援依工具、模型、session 或專案分項顯示。
 
 ## 支援的工具
 
@@ -53,6 +53,7 @@ Mini Token Monitor 對 Token 用量、帳戶額度與 session 明細分別支援
 | <img src=".github/assets/tools-icon/cherrystudio.png" width="28" alt="Cherry Studio" /> | Cherry Studio | `<platform-app-data>/CherryStudio/`（`Data/Agents/.claude/projects/` V2、`.claude/projects/` legacy） | ✅ | — | — |
 | <img src=".github/assets/tools-icon/lmstudio.png" width="28" alt="LM Studio" /> | LM Studio | `~/.lmstudio/server-logs/**/*.log` | ✅ | — | — |
 | <img src=".github/assets/tools-icon/unsloth.png" width="28" alt="Unsloth" /> | Unsloth Studio | `~/.unsloth/studio/studio.db` | ✅ | — | — |
+| <img src=".github/assets/tools-icon/penguin.png" width="28" alt="Penguin Harness" /> | Penguin Harness | `~/.penguin/data/web.db` | ✅ | — | — |
 | <img src=".github/assets/tools-icon/openrouter.png" width="28" alt="OpenRouter" /> | OpenRouter | OpenRouter API 金鑰（查詢用量／金鑰上限；獲授權存取 credits 時顯示餘額，官方文件指定 Management 金鑰） | — | ✅ | — |
 | <img src=".github/assets/tools-icon/minimax.png" width="28" alt="Minimax" /> | Minimax | Minimax API 金鑰（透過 Minimax API 查詢 Token Plan 額度） | — | ✅ | — |
 | <img src=".github/assets/tools-icon/volcengine.png" width="28" alt="Volcengine" /> | Volcengine | Ark API key 或火山引擎 AK/SK（透過火山引擎 API 查詢火山方舟 Coding Plan / Agent Plan 額度） | — | ✅ | — |
@@ -80,6 +81,12 @@ Mini Token Monitor 對 Token 用量、帳戶額度與 session 明細分別支援
 Qoder CN 的 Token 用量來自應用程式本機 SQLite 資料庫，而非 API —— 在 Settings → tools 中啟用（選用，預設關閉）。資料庫路徑依平台自動偵測：macOS `~/Library/Application Support/QoderCN/SharedClientCache/cache/db/local.db`、Windows `%APPDATA%\QoderCN\SharedClientCache\cache\db\local.db`、Linux `~/.config/QoderCN/SharedClientCache/cache/db/local.db` —— 可用 `TOKEN_MONITOR_QODER_CN_DB_PATH` 覆寫。
 
 這是進階本機整合：讀取需要 PATH 上的 `sqlite3` CLI，或內建免 flag 即可用 `node:sqlite` 的 Node 執行環境（Node ≥ 23.4；Electron 元件可能需要 CLI）。讀取失敗會寫入日誌；若已有完整快照，採集器會保留它，而不會以零用量覆蓋。成本依每個對應模型在 models.dev 目錄中的價格估算；Qoder 若變更資料庫 schema，介接器可能失效。
+#### Penguin Harness（本機介接）
+
+Penguin Harness 的 Token 用量讀取自它自己的 SQLite 帳本（`web.db`），不走 API —— 可在 設定 → 工具 中啟用（選用，預設關閉）。資料目錄被移動過時，可設定 `PENGUIN_HOME`，或用 `TOKEN_MONITOR_PENGUIN_DB_PATH` 直接指向該檔案。
+
+這屬於進階本機整合：讀取需要 PATH 上的 `sqlite3` CLI，或一個免 flag 即可用 `node:sqlite` 的 Node 執行環境。帳本由 Penguin Harness 自己寫入，因此日後它變更 schema 可能讓此介接器失效；讀取失敗會保留上一次的正確數字，而不是歸零。
+
 </details>
 
 ## 為什麼要用 Mini Token Monitor？
@@ -90,7 +97,7 @@ Qoder CN 的 Token 用量來自應用程式本機 SQLite 資料庫，而非 API 
 
 ### 用量追蹤
 
-- **即時 Token 追蹤**：Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、OpenCode 等 29+ 種 AI 工具，每輪對話後 UI 在數秒內更新（完整清單見上方表格）
+- **即時 Token 追蹤**：Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、OpenCode 等 30+ 種 AI 工具，每輪對話後 UI 在數秒內更新（完整清單見上方表格）
 - **即時 Token 速率**：可選顯示的即時讀數，以 `tok/s` 顯示生成速度或以 `tok/min` 顯示總消耗
 - **單一 session 明細**：點進某個 session，可看每則提問的 Token 消耗，並展開查看每次回覆的 Token 拆分與用到的工具（開啟時才即時讀取本機 transcript 或資料庫，絕不同步）
 - **快取命中統計**：點擊任何工具或模型，展開查看輸入 Token（快取命中與未命中）、輸出 Token 的詳細分類及命中率百分比

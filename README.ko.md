@@ -16,7 +16,7 @@
 
 ## Mini Token Monitor란?
 
-Claude Code, Codex, Cursor, GitHub Copilot, Cherry Studio 등 36개 이상의 AI 코딩 도구의 토큰 사용량과 AI 도구 한도를 실시간으로 보여주는 메뉴 막대 위젯입니다. 실시간 추세를 지원하며 도구·모델·세션·프로젝트별 분류도 확인할 수 있습니다.
+Claude Code, Codex, Cursor, GitHub Copilot, Cherry Studio 등 37개 이상의 AI 코딩 도구의 토큰 사용량과 AI 도구 한도를 실시간으로 보여주는 메뉴 막대 위젯입니다. 실시간 추세를 지원하며 도구·모델·세션·프로젝트별 분류도 확인할 수 있습니다.
 
 ## 지원 도구
 
@@ -53,6 +53,7 @@ Mini Token Monitor는 토큰 사용량, 계정 한도, 세션 상세를 각각 �
 | <img src=".github/assets/tools-icon/cherrystudio.png" width="28" alt="Cherry Studio" /> | Cherry Studio | `<platform-app-data>/CherryStudio/`(`Data/Agents/.claude/projects/` V2, `.claude/projects/` legacy) | ✅ | — | — |
 | <img src=".github/assets/tools-icon/lmstudio.png" width="28" alt="LM Studio" /> | LM Studio | `~/.lmstudio/server-logs/**/*.log` | ✅ | — | — |
 | <img src=".github/assets/tools-icon/unsloth.png" width="28" alt="Unsloth" /> | Unsloth Studio | `~/.unsloth/studio/studio.db` | ✅ | — | — |
+| <img src=".github/assets/tools-icon/penguin.png" width="28" alt="Penguin Harness" /> | Penguin Harness | `~/.penguin/data/web.db` | ✅ | — | — |
 | <img src=".github/assets/tools-icon/openrouter.png" width="28" alt="OpenRouter" /> | OpenRouter | OpenRouter API 키(사용량/키 한도 조회, credits 접근이 허용되면 잔액 표시, 공식 문서는 Management 키 지정) | — | ✅ | — |
 | <img src=".github/assets/tools-icon/minimax.png" width="28" alt="Minimax" /> | Minimax | Minimax API 키(Minimax API로 Token Plan 할당량 조회) | — | ✅ | — |
 | <img src=".github/assets/tools-icon/volcengine.png" width="28" alt="Volcengine" /> | Volcengine | Ark API key 또는 Volcengine AK/SK(Volcengine API로 Ark Coding Plan / Agent Plan 할당량 조회) | — | ✅ | — |
@@ -80,6 +81,12 @@ Mini Token Monitor는 토큰 사용량, 계정 한도, 세션 상세를 각각 �
 Qoder CN의 토큰 사용량은 API가 아니라 앱의 로컬 SQLite 데이터베이스에서 읽습니다 —— 설정 → tools에서 활성화합니다(옵트인, 기본 꺼짐). 데이터베이스는 플랫폼별로 자동 감지됩니다: macOS `~/Library/Application Support/QoderCN/SharedClientCache/cache/db/local.db`, Windows `%APPDATA%\QoderCN\SharedClientCache\cache\db\local.db`, Linux `~/.config/QoderCN/SharedClientCache/cache/db/local.db` —— `TOKEN_MONITOR_QODER_CN_DB_PATH`로 덮어쓸 수 있습니다.
 
 고급 로컬 통합입니다: 읽기에는 PATH의 `sqlite3` CLI 또는 flag 없이 `node:sqlite`를 쓸 수 있는 Node 런타임이 필요합니다(Node ≥ 23.4; Electron 위젯은 CLI가 필요할 수 있음). 읽기 실패는 로그에 기록되며, 완전한 스냅샷이 이미 있으면 0 사용량으로 덮어쓰지 않고 유지합니다. 비용은 매핑된 각 모델에 대해 models.dev 카탈로그 가격으로 추정합니다. Qoder가 데이터베이스 스키마를 바꾸면 어댑터가 작동하지 않을 수 있습니다.
+#### Penguin Harness(로컬 어댑터)
+
+Penguin Harness의 토큰 사용량은 API가 아니라 자체 SQLite 원장(`web.db`)에서 읽습니다 —— 설정 → tools에서 활성화합니다(옵트인, 기본 꺼짐). 데이터 루트를 옮겼다면 `PENGUIN_HOME`, 파일을 직접 가리키려면 `TOKEN_MONITOR_PENGUIN_DB_PATH`를 쓰세요.
+
+고급 로컬 통합입니다: 읽기에는 PATH의 `sqlite3` CLI 또는 flag 없이 `node:sqlite`를 쓸 수 있는 Node 런타임이 필요합니다. 원장은 Penguin Harness가 직접 기록하므로 향후 스키마가 바뀌면 이 어댑터가 동작하지 않을 수 있습니다. 읽기에 실패하면 0으로 만들지 않고 마지막으로 정상 수집한 값을 유지합니다.
+
 </details>
 
 ## Mini Token Monitor를 쓰는 이유
@@ -90,7 +97,7 @@ Qoder CN의 토큰 사용량은 API가 아니라 앱의 로컬 SQLite 데이터�
 
 ### 사용량 추적
 
-- **실시간 토큰 추적** — Claude Code, Codex, Cursor, GitHub Copilot, Antigravity, OpenCode 등 29개 이상의 AI 도구, 턴당 수 초 내 UI 갱신 (전체 목록은 위 표 참고)
+- **실시간 토큰 추적** — Claude Code, Codex, Cursor, GitHub Copilot, Antigravity, OpenCode 등 30개 이상의 AI 도구, 턴당 수 초 내 UI 갱신 (전체 목록은 위 표 참고)
 - **실시간 토큰 속도** — 생성 속도를 `tok/s`로, 총 소모를 `tok/min`으로 보여주는 선택형 실시간 표시
 - **세션별 상세** — 세션을 열면 프롬프트별 토큰, 응답별 토큰 분할·사용 도구까지 확장 (로컬 transcript/DB를 필요할 때만 읽으며 동기화하지 않음)
 - **캐시 히트 통계** — 도구·모델 클릭 시 입력 토큰(캐시 hit/miss), 출력 토큰, 히트율 상세

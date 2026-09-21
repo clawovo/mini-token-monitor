@@ -58,6 +58,12 @@ const {
 } = require('./providers/kimi/sessionMetadata');
 const { buildPromaHistoryGraph, buildPromaPeriods, collectPromaRows } = require('./providers/proma/usage');
 const {
+  buildPenguinPeriods,
+  collectPenguinRows,
+  penguinDataPaths,
+  resolvePenguinPricing
+} = require('./providers/penguin/usage');
+const {
   buildQoderCnHistoryGraph,
   buildQoderCnPeriods,
   collectQoderCnRows,
@@ -1068,6 +1074,7 @@ async function collectUsageOnce(options) {
   const localClients = new Set(PARSE_LOCAL_CLIENTS);
   const tokscaleClients = normalizedClients ? normalizedClients.split(',').filter((c) => !localClients.has(c)).join(',') : normalizedClients;
   const includesProma = normalizedClients.split(',').includes('proma');
+  const includesPenguin = normalizedClients.split(',').includes('penguin');
   const includesQoderCn = normalizedClients.split(',').includes('qodercn');
   const trackedClientSet = new Set(normalizedClients.split(',').filter(Boolean));
   const targetClients = [...new Set(normalizeClientsCsv(options.targetClients).split(',').filter((client) => trackedClientSet.has(client)))];
@@ -1095,6 +1102,8 @@ async function collectUsageOnce(options) {
   let promaPeriods = null;
   let promaRows = null;
   let promaPricing = null;
+  let penguinPeriods = null;
+  let penguinPeriodReadFailed = false;
   let qoderCnPeriods = null;
   let qoderCnRows = null;
   let qoderCnPricing = null;
@@ -1143,6 +1152,34 @@ async function collectUsageOnce(options) {
         };
       } catch (err) {
         if (typeof options.logger === 'function') options.logger(`proma parse failed: ${err.message}`);
+      }
+    }
+    if (includesPenguin && (!targetRequested || targetClients.includes('penguin'))) {
+      try {
+        const penguinRows = await collectPenguinRows({
+          homeDir: options.homeDir,
+          env: options.env,
+          logger: options.logger
+        });
+        const penguinPricing = await resolvePenguinPricing(penguinRows, {
+          lookupModelPricing: options.lookupModelPricing || lookupModelPricing,
+          commandTimeoutMs: options.pricingTimeoutMs,
+          pricingRevision: options.pricingRevision
+        });
+        const penguinJson = buildPenguinPeriods({
+          now: collectedAt,
+          allTimeSince,
+          rows: penguinRows,
+          pricingByModel: penguinPricing
+        });
+        penguinPeriods = {
+          today: extractUsageFromTokscale(penguinJson.today),
+          month: extractUsageFromTokscale(penguinJson.month),
+          allTime: extractUsageFromTokscale(penguinJson.allTime)
+        };
+      } catch (err) {
+        if (typeof options.logger === 'function') options.logger(`penguin parse failed: ${err.message}`);
+        penguinPeriodReadFailed = true;
       }
     }
     if (includesQoderCn && (!targetRequested || targetClients.includes('qodercn'))) {
@@ -1221,6 +1258,13 @@ async function collectUsageOnce(options) {
         // partition into an empty one or subtract it from month/allTime.
         freshPartitions.qodercn = anchor.todayPartitions.qodercn;
       }
+      if (penguinPeriods) freshPartitions.penguin = penguinPeriods.today;
+      if (penguinPeriodReadFailed && anchor.todayPartitions?.penguin) {
+        // Same reasoning as Qoder CN: penguin's ledger is another tool's database,
+        // so a lock or a schema hiccup is transient and must not zero the partition
+        // the previous tick established.
+        freshPartitions.penguin = anchor.todayPartitions.penguin;
+      }
       if (!useTargetedPartitions) {
         // The fallback rebuilds every Tokscale partition, but parse-local
         // adapters do not participate in that scan. Preserve any adapter that
@@ -1281,6 +1325,12 @@ async function collectUsageOnce(options) {
       month = mergePeriods(month, promaPeriods.month);
       allTime = mergePeriods(allTime, promaPeriods.allTime);
       todayPartitions = { ...(todayPartitions || {}), proma: promaPeriods.today };
+    }
+    if (penguinPeriods && !anchorUsed) {
+      today = mergePeriods(today, penguinPeriods.today);
+      month = mergePeriods(month, penguinPeriods.month);
+      allTime = mergePeriods(allTime, penguinPeriods.allTime);
+      todayPartitions = { ...(todayPartitions || {}), penguin: penguinPeriods.today };
     }
     if (qoderCnPeriods && !anchorUsed) {
       today = mergePeriods(today, qoderCnPeriods.today);
@@ -1845,6 +1895,11 @@ function clientSourceRoots(clientsCsv, options = {}) {
   // Qoder CN — SQLite DB under the platform Application Support dir.
   const qoderCnPaths = qoderCnDataPaths({ homeDir: home, platform: process.platform, env: process.env });
   add('qodercn', ...qoderCnPaths.dbPaths.map((dbPath) => ['qodercn-db', path.dirname(dbPath), dbPath]));
+  // Penguin Harness — SQLite ledger at <PENGUIN_HOME | ~/.penguin/data>/web.db.
+  // One exact file: tokscale never reads it, and the rest of that data root is
+  // server state (traces, logs, uploads) whose writes carry no token usage.
+  const penguinPaths = penguinDataPaths({ homeDir: home, env: process.env });
+  add('penguin', ...penguinPaths.dbPaths.map((dbPath) => ['penguin-db', path.dirname(dbPath), dbPath]));
   add('reasonix', [
     REASONIX_SOURCE_CHECK_ID,
     resolveReasonixStatsDir({ env: process.env, homeDir: home, platform: process.platform, cwdDir: process.cwd() })
@@ -2832,11 +2887,25 @@ function watcherOptions(usePolling, ignored) {
   };
 }
 
-function isQoderCnSelfWatchEvent(filePath, rootsByClient = {}) {
+// Adapters that read another tool's SQLite database. Opening one of these
+// read-only still recreates its wal-index sidecar, so watching *.db-shm under the
+// adapter's roots re-triggers the watch loop forever — measured once at 142
+// events/5min with Qoder CN itself stopped, dropping to 0 once filtered. The real
+// signal lives in the database and its WAL, both of which stay watched.
+const LOCAL_DB_SELF_WATCH_CLIENTS = Object.freeze(['qodercn', 'penguin']);
+
+function isLocalDbSelfWatchEvent(filePath, rootsByClient = {}) {
   if (!filePath || !path.basename(filePath).endsWith('.db-shm')) return false;
   const resolved = path.resolve(filePath);
-  return (rootsByClient.qodercn || [])
-    .some((root) => resolved.startsWith(path.resolve(root) + path.sep));
+  return LOCAL_DB_SELF_WATCH_CLIENTS.some((client) => (rootsByClient[client] || [])
+    .some((root) => resolved.startsWith(path.resolve(root) + path.sep)));
+}
+
+// The Qoder CN name is kept for the existing callers and tests; both adapters go
+// through the same implementation so a third cannot be added without being
+// covered by it.
+function isQoderCnSelfWatchEvent(filePath, rootsByClient = {}) {
+  return isLocalDbSelfWatchEvent(filePath, rootsByClient);
 }
 
 function startCollector(options) {
@@ -3568,7 +3637,7 @@ function startCollector(options) {
       // in local.db / local.db-wal, so drop *.db-shm events under the
       // qodercn roots only. (hermes/micode may share this pattern upstream —
       // out of scope here, their watch behaviour is left untouched.)
-      if (isQoderCnSelfWatchEvent(filePath, rootsByClient)) return;
+      if (isLocalDbSelfWatchEvent(filePath, rootsByClient)) return;
       activityRevision += 1;
       if (tickPending) {
         pendingActivityRevision = pendingActivityRevision === null
@@ -3809,6 +3878,7 @@ module.exports = {
   // read or pin a client's floor directly instead of inferring it from tick
   // timings; the collector never takes a second instance.
   selfSyncThrottle,
+  isLocalDbSelfWatchEvent,
   isQoderCnSelfWatchEvent,
   shouldIncludeHistory,
   spawnTokscaleHelp,

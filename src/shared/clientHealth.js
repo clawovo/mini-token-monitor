@@ -206,6 +206,7 @@ const CLIENT_SOURCE_CHECK_IDS = Object.freeze([
   'omp-sessions',
   'opencode-data',
   'openclaw-agents',
+  'penguin-db',
   'pi-sessions',
   'proma-sessions',
   'qodercn-db',

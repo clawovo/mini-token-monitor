@@ -68,7 +68,12 @@
     { id: 'dsh', label: 'DeepSeek Harness' },
     { id: 'cherrystudio', label: 'Cherry Studio' },
     { id: 'lmstudio', label: 'LM Studio' },
-    { id: 'unsloth', label: 'Unsloth' }
+    { id: 'unsloth', label: 'Unsloth' },
+    // Opt-in like Qoder CN, and for the same reason: this is a local adapter over
+    // a database the tool owns (web.db), so an upstream schema change can break it
+    // without notice. tokscale does not parse it, so it is read by
+    // providers/penguin/usage.js and excluded from the scan's client list.
+    { id: 'penguin', label: 'Penguin Harness', defaultTracked: false, locallyParsed: true }
   ].map((client) => Object.freeze({
     defaultTracked: true,
     locallyParsed: false,

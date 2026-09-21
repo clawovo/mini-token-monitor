@@ -16,7 +16,7 @@
 
 ## Mini Token Monitor とは
 
-Claude Code、Codex、Cursor、GitHub Copilot、Cherry Studio など 36+ 種類の AI コーディングツールのトークン使用量と AI ツール制限をリアルタイムに表示するメニューバーウィジェットです。リアルタイムのトレンドに対応し、ツール・モデル・セッション・プロジェクト別の内訳も確認できます。
+Claude Code、Codex、Cursor、GitHub Copilot、Cherry Studio など 37+ 種類の AI コーディングツールのトークン使用量と AI ツール制限をリアルタイムに表示するメニューバーウィジェットです。リアルタイムのトレンドに対応し、ツール・モデル・セッション・プロジェクト別の内訳も確認できます。
 
 ## 対応ツール
 
@@ -53,6 +53,7 @@ Mini Token Monitor はトークン使用量、アカウント制限、セッシ�
 | <img src=".github/assets/tools-icon/cherrystudio.png" width="28" alt="Cherry Studio" /> | Cherry Studio | `<platform-app-data>/CherryStudio/`（`Data/Agents/.claude/projects/` V2、`.claude/projects/` legacy） | ✅ | — | — |
 | <img src=".github/assets/tools-icon/lmstudio.png" width="28" alt="LM Studio" /> | LM Studio | `~/.lmstudio/server-logs/**/*.log` | ✅ | — | — |
 | <img src=".github/assets/tools-icon/unsloth.png" width="28" alt="Unsloth" /> | Unsloth Studio | `~/.unsloth/studio/studio.db` | ✅ | — | — |
+| <img src=".github/assets/tools-icon/penguin.png" width="28" alt="Penguin Harness" /> | Penguin Harness | `~/.penguin/data/web.db` | ✅ | — | — |
 | <img src=".github/assets/tools-icon/openrouter.png" width="28" alt="OpenRouter" /> | OpenRouter | OpenRouter API キー（使用量／キー上限を照会。credits へのアクセスが許可されている場合は残高、Management キーが公式ドキュメントで指定） | — | ✅ | — |
 | <img src=".github/assets/tools-icon/minimax.png" width="28" alt="Minimax" /> | Minimax | Minimax API キー（Minimax API 経由で Token Plan クォータを照会） | — | ✅ | — |
 | <img src=".github/assets/tools-icon/volcengine.png" width="28" alt="Volcengine" /> | Volcengine | Ark API key または Volcengine AK/SK（Volcengine API 経由で Ark Coding Plan / Agent Plan クォータを照会） | — | ✅ | — |
@@ -80,6 +81,12 @@ Mini Token Monitor はトークン使用量、アカウント制限、セッシ�
 Qoder CN のトークン使用量は API ではなく、アプリのローカル SQLite データベースから読み取ります —— 設定 → tools で有効化します（オプトイン、既定ではオフ）。データベースはプラットフォームごとに自動検出されます：macOS `~/Library/Application Support/QoderCN/SharedClientCache/cache/db/local.db`、Windows `%APPDATA%\QoderCN\SharedClientCache\cache\db\local.db`、Linux `~/.config/QoderCN/SharedClientCache/cache/db/local.db` —— `TOKEN_MONITOR_QODER_CN_DB_PATH` で上書きできます。
 
 これは高度なローカル統合です：読み取りには PATH 上の `sqlite3` CLI、または flag なしで `node:sqlite` を使える Node ランタイムが必要です（Node ≥ 23.4。Electron 版では CLI が必要な場合があります）。読み取り失敗はログに記録され、完全なスナップショットが既にある場合はゼロ使用量で上書きせず保持します。コストはマッピングされた各モデルについて models.dev カタログの価格から推定されます。Qoder がデータベーススキーマを変更すると、アダプターが機能しなくなる可能性があります。
+#### Penguin Harness（ローカルアダプター）
+
+Penguin Harness のトークン使用量は API ではなく、本体の SQLite 台帳（`web.db`）から読み取ります —— 設定 → tools で有効化します（オプトイン、既定ではオフ）。データルートを移動した場合は `PENGUIN_HOME`、ファイルを直接指定するなら `TOKEN_MONITOR_PENGUIN_DB_PATH` を使います。
+
+これは高度なローカル統合です：読み取りには PATH 上の `sqlite3` CLI、または flag なしで `node:sqlite` を使える Node ランタイムが必要です。台帳は Penguin Harness 自身が書き込むため、将来のスキーマ変更でこのアダプターが動かなくなる可能性があります。読み取りに失敗した場合は、ゼロではなく直前に取得できた正しい数値を保持します。
+
 </details>
 
 ## Mini Token Monitor を使う理由
@@ -90,7 +97,7 @@ Qoder CN のトークン使用量は API ではなく、アプリのローカル
 
 ### 使用量の追跡
 
-- **リアルタイムトークン追跡** — Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、OpenCode など 29+ 種類の AI ツール、各ターンから数秒以内に UI 更新（全リストは上の表を参照）
+- **リアルタイムトークン追跡** — Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、OpenCode など 30+ 種類の AI ツール、各ターンから数秒以内に UI 更新（全リストは上の表を参照）
 - **リアルタイムトークンレート** — 生成速度を `tok/s`、総消費を `tok/min` で表示する任意のライブ表示
 - **セッション別詳細** — セッションを開くとプロンプトごとのトークン、各応答のトークン分割・使用ツールまで展開（ローカル transcript/DB を必要時のみ読み込み、同期しない）
 - **キャッシュヒット統計** — ツール・モデルをクリックすると入力トークン（キャッシュ hit/miss）、出力トークン、ヒット率の詳細
