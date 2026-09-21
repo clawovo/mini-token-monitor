@@ -269,13 +269,6 @@ const TRAY_CONTENT_MENU_ITEMS = [
   ['custom', 'trayMenu.content.custom']
 ];
 
-const WINDOW_PRESENTATION_MENU_ITEMS = [
-  ['tray', 'trayMenu.presentation.tray'],
-  ['floating', 'trayMenu.presentation.floating'],
-  ['normal', 'trayMenu.presentation.normal'],
-  ['desktop', 'trayMenu.presentation.desktop']
-];
-
 const OPEN_VIEW_MENU_ITEMS = [
   ['home', 'views.home'],
   ['project', 'views.project'],
@@ -287,7 +280,6 @@ const OPEN_VIEW_MENU_ITEMS = [
 
 function buildTrayMenuTemplate(options = {}) {
   const state = options.state || {};
-  const presentation = state.trayMode ? 'tray' : state.windowBehavior;
   const callback = (name) => (typeof options[name] === 'function' ? options[name] : () => {});
   const t = (key, params) => {
     const translated = typeof options.translate === 'function' ? options.translate(key, params) : '';
@@ -343,15 +335,6 @@ function buildTrayMenuTemplate(options = {}) {
         click: () => callback('onSetTrayContent')(value)
       }))
     },
-    {
-      label: t('trayMenu.windowPresentation'),
-      submenu: WINDOW_PRESENTATION_MENU_ITEMS.map(([value, labelKey]) => ({
-        label: t(labelKey),
-        type: 'radio',
-        checked: presentation === value,
-        click: () => callback('onSetWindowPresentation')(value)
-      }))
-    },
     { type: 'separator' },
     { label: t('trayMenu.version', { version: state.appVersion || '' }), enabled: false },
     { label: t('trayMenu.settings'), click: callback('onOpenSettings') },
@@ -378,7 +361,6 @@ function createTray({
   onQuit,
   onRefresh,
   onSetTrayContent,
-  onSetWindowPresentation,
   onSwitchCodexAccount,
   onToggle,
   platform = process.platform,
@@ -396,17 +378,6 @@ function createTray({
     onQuit,
     onRefresh,
     onSetTrayContent,
-    // Non-tray presentation changes can keep an existing Linux tray alive,
-    // so re-export the D-Bus menu after the callback mutates settings.
-    onSetWindowPresentation: (value) => {
-      try {
-        return typeof onSetWindowPresentation === 'function'
-          ? onSetWindowPresentation(value)
-          : undefined;
-      } finally {
-        refreshContextMenu();
-      }
-    },
     onSwitchCodexAccount,
     translate: translateMenu
   }));

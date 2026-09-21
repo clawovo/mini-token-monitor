@@ -345,40 +345,6 @@ test('Windows tray keeps building its menu when right-clicked', () => {
   assert.equal(calls.popups[0].template[0].label, 'Refreshing…');
 });
 
-test('Linux tray re-exports the checked window presentation after a menu action', () => {
-  const calls = trayCalls();
-  let state = {
-    locale: 'en',
-    trayContent: 'tokens',
-    trayMode: false,
-    windowBehavior: 'floating'
-  };
-  createTray({
-    electron: fakeTrayElectron(calls),
-    getMenuState: () => state,
-    onSetWindowPresentation(value) {
-      state = {
-        ...state,
-        trayMode: value === 'tray',
-        ...(value === 'tray' ? {} : { windowBehavior: value })
-      };
-    },
-    onToggle() {},
-    platform: 'linux'
-  });
-
-  const presentationItems = calls.contextMenus[0].template
-    .find((item) => item.label === 'Window Presentation').submenu;
-  assert.deepEqual(presentationItems.map((item) => item.checked), [false, true, false, false]);
-
-  presentationItems.find((item) => item.label === 'Normal Window').click();
-
-  assert.equal(calls.contextMenus.length, 2);
-  const refreshedItems = calls.contextMenus[1].template
-    .find((item) => item.label === 'Window Presentation').submenu;
-  assert.deepEqual(refreshedItems.map((item) => item.checked), [false, false, true, false]);
-});
-
 test('tray menu actions publish both in-flight transitions', async () => {
   let inFlight = false;
   let finish;
@@ -420,40 +386,39 @@ test('tray context menu complements the primary click with useful commands', () 
     onRefresh: () => calls.push(['refresh']),
     onOpenView: (value) => calls.push(['view', value]),
     onSetTrayContent: (value) => calls.push(['content', value]),
-    onSetWindowPresentation: (value) => calls.push(['presentation', value]),
     onOpenSettings: () => calls.push(['settings']),
     onQuit: () => calls.push(['quit'])
   });
 
+  // The menu carries commands only now: the window-presentation submenu is gone,
+  // because tray mode is the default presentation and the title-bar cycle covers
+  // the remaining modes.
   assert.deepEqual(template.map((item) => item.label || item.type), [
-    'Refresh Now', 'Open View', 'separator', 'Tray Display', 'Window Presentation', 'separator', 'Version 0.27.0', 'Settings…', 'Quit Mini Token Monitor'
+    'Refresh Now', 'Open View', 'separator', 'Tray Display', 'separator', 'Version 0.27.0', 'Settings…', 'Quit Mini Token Monitor'
   ]);
   assert.equal(template.some((item) => item.label === 'Show / Hide'), false);
+  assert.equal(template.some((item) => item.label === 'Window Presentation'), false);
   assert.equal(template[3].submenu.find((item) => item.label === 'Today Tokens + Cost').checked, true);
   assert.equal(template[3].submenu.find((item) => item.label === 'Live rate (tok/s)').checked, false);
-  assert.equal(template[4].submenu.find((item) => item.label === 'Tray Popover').checked, true);
 
   template[0].click();
   template[1].submenu.find((item) => item.label === 'Projects').click();
   template[3].submenu.find((item) => item.label === 'App Icon Only').click();
-  template[4].submenu.find((item) => item.label === 'Desktop Pinned').click();
-  assert.equal(template[6].enabled, false);
+  assert.equal(template[5].enabled, false);
+  template[6].click();
   template[7].click();
-  template[8].click();
   assert.deepEqual(calls, [
-    ['refresh'], ['view', 'project'], ['content', 'icon'], ['presentation', 'desktop'], ['settings'], ['quit']
+    ['refresh'], ['view', 'project'], ['content', 'icon'], ['settings'], ['quit']
   ]);
 });
 
-test('tray context menu exposes refresh progress and current window mode', () => {
+test('tray context menu exposes refresh progress', () => {
   const template = buildTrayMenuTemplate({
     state: { refreshing: true, trayContent: 'tokens', trayMode: false, windowBehavior: 'desktop' }
   });
 
   assert.equal(template[0].label, 'Refreshing…');
   assert.equal(template[0].enabled, false);
-  assert.equal(template[4].submenu.find((item) => item.label === 'Desktop Pinned').checked, true);
-  assert.equal(template[4].submenu.find((item) => item.label === 'Tray Popover').checked, false);
 });
 
 test('tray context menu uses the selected locale for every visible level', () => {
@@ -463,7 +428,7 @@ test('tray context menu uses the selected locale for every visible level', () =>
   });
 
   assert.deepEqual(template.map((item) => item.label || item.type), [
-    '立即重新整理', '開啟頁面', 'separator', '托盤顯示', '視窗呈現方式', 'separator', '版本 0.27.0', '設定…', '結束 Mini Token Monitor'
+    '立即重新整理', '開啟頁面', 'separator', '托盤顯示', 'separator', '版本 0.27.0', '設定…', '結束 Mini Token Monitor'
   ]);
   assert.equal(template[1].submenu[0].label, '主頁');
   assert.equal(template[3].submenu[0].label, '今日 Tokens');
@@ -473,8 +438,6 @@ test('tray context menu uses the selected locale for every visible level', () =>
     '僅顯示 App 圖示',
     '自訂'
   ]);
-  assert.equal(template[4].submenu[0].label, '托盤彈出視窗');
-  assert.equal(template[4].submenu.at(-1).label, '固定於桌面');
 });
 
 test('tray context menu disables unavailable views', () => {
@@ -653,7 +616,6 @@ test('tray main-process actions surface refresh errors and expand a collapsed bu
   assert.match(refreshAction, /catch \(error\)[\s\S]*?showTrayRefreshError\(error\?\.message \|\| error\)/);
   assert.match(refreshAction, /return runTrayMenuAction\(\{[\s\S]*?trayRefreshInFlight = value;[\s\S]*?refreshContextMenu: refreshTrayContextMenu/);
   assert.match(codexSwitchAction, /return runTrayMenuAction\(\{[\s\S]*?trayCodexSwitchInFlight = value;[\s\S]*?refreshContextMenu: refreshTrayContextMenu/);
-  assert.match(source, /if \(value === 'tray'\)[\s\S]*?saveSettings\(\);\s*syncFloatingBubbleAvailability\(\);\s*enterTrayMode\(\);/);
 });
 
 test('usage tray icon picks the top token client for day and total token modes', () => {

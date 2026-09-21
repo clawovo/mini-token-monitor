@@ -4087,31 +4087,6 @@ function setTrayContentFromMenu(value) {
   pushSettingsToRenderer();
 }
 
-function setWindowPresentationFromMenu(value) {
-  if (value === 'tray') {
-    if (settings.trayMode) return;
-    settings.trayMode = true;
-    saveSettings();
-    syncFloatingBubbleAvailability();
-    enterTrayMode();
-    pushSettingsToRenderer();
-    return;
-  }
-
-  const previousTrayMode = settings.trayMode;
-  settings = normalizeWindowBehaviorSettings(settings, {
-    trayMode: false,
-    windowBehavior: value
-  });
-  saveSettings();
-  if (previousTrayMode) exitTrayMode();
-  else {
-    applyWindowSettings();
-    focusExistingWindow();
-  }
-  pushSettingsToRenderer();
-}
-
 function openSettingsFromTray() {
   focusExistingWindow();
   sendMainWindowEvent('settings:open');
@@ -4252,7 +4227,6 @@ function ensureTray() {
     onOpenView: openViewFromTray,
     onRefresh: () => { void refreshFromTray(); },
     onSetTrayContent: setTrayContentFromMenu,
-    onSetWindowPresentation: setWindowPresentationFromMenu,
     onSwitchCodexAccount: (accountId) => { void switchCodexAccountFromTray(accountId); },
     onOpenSettings: openSettingsFromTray,
     onQuit: requestAppQuit,
