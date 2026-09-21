@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const path = require('node:path');
 const test = require('node:test');
 
 const {
@@ -191,24 +192,38 @@ test('a machine without penguin-harness reads nothing instead of throwing', asyn
 
 test('the database path follows upstream: our override, then PENGUIN_WEB_DB, then PENGUIN_HOME, then the default', () => {
   const homeDir = '/Users/x';
-  assert.equal(penguinDataPaths({ homeDir, env: {} }).dbPaths[0], '/Users/x/.penguin/data/web.db');
+  // Built with path.join rather than written as literal POSIX strings: the
+  // adapter composes paths the platform way, so a hardcoded expectation would
+  // pass on macOS/Linux and fail on Windows for a reason that is not a defect.
+  const defaultRoot = path.join(homeDir, '.penguin', 'data');
+  assert.equal(penguinDataPaths({ homeDir, env: {} }).dbPaths[0], path.join(defaultRoot, 'web.db'));
   assert.equal(
-    penguinDataPaths({ homeDir, env: { PENGUIN_HOME: '/opt/pg' } }).dbPaths[0],
-    '/opt/pg/web.db'
+    penguinDataPaths({ homeDir, env: { PENGUIN_HOME: path.resolve('/opt/pg') } }).dbPaths[0],
+    path.join(path.resolve('/opt/pg'), 'web.db')
   );
   assert.equal(
-    penguinDataPaths({ homeDir, env: { PENGUIN_WEB_DB: '/tmp/w.db' } }).dbPaths[0],
-    '/tmp/w.db'
+    penguinDataPaths({ homeDir, env: { PENGUIN_WEB_DB: path.resolve('/tmp/w.db') } }).dbPaths[0],
+    path.resolve('/tmp/w.db')
   );
   assert.equal(
     penguinDataPaths({
       homeDir,
-      env: { PENGUIN_WEB_DB: '/tmp/w.db', TOKEN_MONITOR_PENGUIN_DB_PATH: '/tmp/fixture.db' }
+      env: { PENGUIN_WEB_DB: path.resolve('/tmp/w.db'), TOKEN_MONITOR_PENGUIN_DB_PATH: path.resolve('/tmp/fixture.db') }
     }).dbPaths[0],
-    '/tmp/fixture.db',
+    path.resolve('/tmp/fixture.db'),
     'our own override wins so a test can point at a fixture'
   );
   // Upstream resolves a relative PENGUIN_HOME against its own cwd; a collector
   // process has no meaningful cwd, so it is ignored rather than guessed at.
-  assert.equal(resolvePenguinRoot({ homeDir, env: { PENGUIN_HOME: 'relative/dir' } }), '/Users/x/.penguin/data');
+  assert.equal(resolvePenguinRoot({ homeDir, env: { PENGUIN_HOME: 'relative/dir' } }), defaultRoot);
+  // A Windows drive letter is absolute and must be honoured there. Guarded rather
+  // than asserted unconditionally: on POSIX that string is a relative path, so the
+  // env is (correctly) ignored and a single expectation cannot cover both.
+  if (process.platform === 'win32') {
+    const windowsHome = 'C:\\penguin-home';
+    assert.equal(
+      penguinDataPaths({ homeDir, env: { PENGUIN_HOME: windowsHome } }).dbPaths[0],
+      path.join(windowsHome, 'web.db')
+    );
+  }
 });
