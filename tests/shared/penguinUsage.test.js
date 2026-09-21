@@ -190,6 +190,40 @@ test('a machine without penguin-harness reads nothing instead of throwing', asyn
   assert.deepEqual(rows, []);
 });
 
+test('a dev-only machine is read, while a machine holding both ledgers is not mixed', () => {
+  const homeDir = '/Users/x';
+  const primary = path.join(homeDir, '.penguin', 'data', 'web.db');
+  const devData = path.join(homeDir, '.penguin', 'dev-data', 'web.db');
+  const devCli = path.join(homeDir, '.penguin', 'dev-data-cli', 'web.db');
+  const withFiles = (...present) => ({
+    statSync: (candidate) => {
+      if (present.includes(candidate)) return { isFile: () => true };
+      throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+    }
+  });
+
+  // The case this fallback exists for: only the dev server has ever run here.
+  assert.deepEqual(penguinDataPaths({ homeDir, env: {}, fs: withFiles(devData) }).dbPaths, [devData]);
+  // The dev CLI's root is the second fallback.
+  assert.deepEqual(penguinDataPaths({ homeDir, env: {}, fs: withFiles(devCli) }).dbPaths, [devCli]);
+  // Both present: the installed app's ledger stays authoritative and exactly one
+  // path comes back, so a sandbox is never added on top of the real numbers.
+  assert.deepEqual(penguinDataPaths({ homeDir, env: {}, fs: withFiles(primary, devData) }).dbPaths, [primary]);
+  // Neither present: unchanged, so "not installed" still reads nothing.
+  assert.deepEqual(penguinDataPaths({ homeDir, env: {}, fs: withFiles() }).dbPaths, [primary]);
+  // An explicit root opts out of the fallback entirely.
+  assert.deepEqual(
+    penguinDataPaths({ homeDir, env: { PENGUIN_HOME: path.resolve('/opt/pg') }, fs: withFiles(devData) }).dbPaths,
+    [path.join(path.resolve('/opt/pg'), 'web.db')]
+  );
+  // An explicit file is honoured even when it does not exist: an instruction to
+  // read a named ledger must not quietly read a different one.
+  assert.deepEqual(
+    penguinDataPaths({ homeDir, env: { TOKEN_MONITOR_PENGUIN_DB_PATH: path.resolve('/tmp/w.db') }, fs: withFiles() }).dbPaths,
+    [path.resolve('/tmp/w.db')]
+  );
+});
+
 test('the database path follows upstream: our override, then PENGUIN_WEB_DB, then PENGUIN_HOME, then the default', () => {
   const homeDir = '/Users/x';
   // Built with path.join rather than written as literal POSIX strings: the
@@ -216,6 +250,16 @@ test('the database path follows upstream: our override, then PENGUIN_WEB_DB, the
   // Upstream resolves a relative PENGUIN_HOME against its own cwd; a collector
   // process has no meaningful cwd, so it is ignored rather than guessed at.
   assert.equal(resolvePenguinRoot({ homeDir, env: { PENGUIN_HOME: 'relative/dir' } }), defaultRoot);
+  // Upstream spells these roots with a `~` in its own docs and dev scripts, so a
+  // documented value must not be silently ignored for lacking a leading slash.
+  assert.equal(
+    penguinDataPaths({ homeDir, env: { PENGUIN_HOME: '~/.penguin/dev-data' } }).dbPaths[0],
+    path.join(homeDir, '.penguin', 'dev-data', 'web.db')
+  );
+  assert.equal(
+    penguinDataPaths({ homeDir, env: { TOKEN_MONITOR_PENGUIN_DB_PATH: '~/dev/web.db' } }).dbPaths[0],
+    path.join(homeDir, 'dev', 'web.db')
+  );
   // A Windows drive letter is absolute and must be honoured there. Guarded rather
   // than asserted unconditionally: on POSIX that string is a relative path, so the
   // env is (correctly) ignored and a single expectation cannot cover both.
