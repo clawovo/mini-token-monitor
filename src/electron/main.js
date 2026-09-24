@@ -4957,6 +4957,9 @@ function isAllowedExternalUrl(value) {
   if (parsed.hostname === 'z.ai' || parsed.hostname === 'www.z.ai') return true;
   if (parsed.hostname === 'bigmodel.cn' || parsed.hostname === 'www.bigmodel.cn') return true;
   if (parsed.hostname === 'www.volcengine.com' || parsed.hostname === 'console.volcengine.com') return true;
+  // The arkcli install guide is the one Ark documentation page the Volcengine
+  // settings panel opens, so the docs host stays scoped to the Ark docs tree.
+  if (parsed.hostname === 'docs.volcengine.com' && parsed.pathname.startsWith('/docs/ark/')) return true;
   if (parsed.hostname === 'qoder.com' || parsed.hostname === 'www.qoder.com' || parsed.hostname === 'qoder.com.cn' || parsed.hostname === 'www.qoder.com.cn') return true;
   if (parsed.hostname === 'trae.cn' || parsed.hostname === 'www.trae.cn') return true;
   if (parsed.hostname === 'commandcode.ai' || parsed.hostname === 'www.commandcode.ai') return true;

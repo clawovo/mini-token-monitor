@@ -944,7 +944,11 @@
                   <button id="volcengineRefreshButton" data-i18n="settings.common.refresh">Refresh</button>
                 </div>
                 <div id="volcengineManualPanel">
-                  <p class="settings-note" data-i18n="settings.volcengine.note">Paste an Ark API key, or use a Volcengine access key ID with the secret field. An access key reads both the Coding Plan and the Agent Plan.</p>
+                  <p class="settings-note" data-i18n="settings.volcengine.note">Paste a Volcengine access key ID with its secret to read the Coding Plan and Agent Plan quotas. A plan API key (ark-...) cannot read quota, so a signed-in arkcli is used instead.</p>
+                  <p class="settings-note">
+                    <span data-i18n="settings.volcengine.cliNote">No access key? Sign in with arkcli on this computer and both plans are read from the CLI.</span>
+                    <button id="volcengineCliGuideButton" class="link-button" type="button" data-i18n="settings.volcengine.cliGuide">arkcli install guide</button>
+                  </p>
                   <div class="settings-row">
                     <label for="volcengineAccessKeyInput" data-i18n="settings.volcengine.accessKeyId">Access key ID / API key</label>
                     <input id="volcengineAccessKeyInput" type="password" spellcheck="false" placeholder="AKLT... or ark-..." data-i18n-placeholder="settings.volcengine.accessKeyPlaceholder" />

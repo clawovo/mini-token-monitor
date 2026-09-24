@@ -15276,6 +15276,10 @@ function zaiteamPlatformUrl() {
   return 'https://bigmodel.cn/coding-plan/team/usage-stats';
 }
 
+// The plan's dedicated API key authenticates inference only, so the CLI is the
+// documented way to read plan quota without an access key.
+const VOLCENGINE_ARKCLI_GUIDE_URL = 'https://docs.volcengine.com/docs/ark/ark-cli?lang=zh';
+
 function volcenginePlatformUrl() {
   return 'https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement?LLM=%7B%7D&advancedActiveKey=subscribe';
 }
@@ -17458,6 +17462,10 @@ function setupCursorAccountUI() {
 
     document.getElementById('volcengineOpenBrowser').addEventListener('click', () => {
       window.tokenMonitor.openExternal(volcenginePlatformUrl());
+    });
+
+    document.getElementById('volcengineCliGuideButton')?.addEventListener('click', () => {
+      window.tokenMonitor.openExternal(VOLCENGINE_ARKCLI_GUIDE_URL);
     });
 
     document.getElementById('volcengineAgentToggle')?.addEventListener('click', () => {
