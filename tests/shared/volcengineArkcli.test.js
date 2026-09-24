@@ -36,7 +36,8 @@ test('STS-only login is accepted; absent login never queries quota', async () =>
     let count = 0;
     const rows = await fetchVolcengineLimits({}, { env: {}, runArkcli: async () =>
       ++count === 1 ? { ...auth, logged_in, auth_method: 'sts' } : response() });
-    assert.equal(count, logged_in ? 2 : 1);
+    // One auth check plus one query per plan product.
+    assert.equal(count, logged_in ? 3 : 1);
     assert.equal(rows[0].status, logged_in ? 'ok' : 'notConfigured');
   }
 });
@@ -56,6 +57,9 @@ test('incomplete explicit account never falls through to a different CLI identit
 test('no subscription is hidden, while errors and malformed quota are unavailable', async () => {
   for (const variant of ['none', 'error', 'missing', 'null-used', 'bad-total', 'empty', 'unknown', 'zero']) {
     const body = response();
+    // Each plan answers its own query; an account that owns neither is the case
+    // under test here, so both buckets report "not subscribed".
+    body.items.push({ product: 'coding-plan', subscribed: false, periods: [] });
     if (variant === 'none') body.items[0].subscribed = false;
     if (variant === 'error') body.items[0].error = 'sensitive upstream response';
     if (variant === 'missing') body.items = [];
@@ -150,6 +154,76 @@ function mockChild() {
   child.kill = () => { setImmediate(() => child.emit('close', null)); return true; };
   return child;
 }
+test('version-manager installs are found under a truncated PATH, newest Node first', (t) => {
+  const fs = require('node:fs'); const path = require('node:path'); const os = require('node:os');
+  const { resolveArkcliCommand } = require('../../src/shared/providers/volcengine/arkcli');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tm-arkcli-nvm-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const install = (version) => {
+    const dir = path.join(root, '.nvm', 'versions', 'node', version, 'bin');
+    fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, 'arkcli');
+    fs.writeFileSync(file, '');
+    return file;
+  };
+  const older = install('v20.11.0');
+  const newer = install('v24.18.0');
+  // Exactly what a Dock/Finder-launched Electron app inherits.
+  const env = { HOME: root, PATH: '/usr/bin:/bin' };
+  assert.equal(resolveArkcliCommand(env), fs.realpathSync(newer));
+  assert.notEqual(resolveArkcliCommand(env), fs.realpathSync(older));
+});
+test('a missing CLI is reported as install-required, a logged-out CLI as sign-in-required', async () => {
+  const missing = await fetchVolcengineLimits({}, { env: {}, runArkcli: async () => {
+    throw Object.assign(new Error('private output'), { status: 'notConfigured', code: 'arkcliMissing' });
+  } });
+  assert.equal(missing[0].status, 'notConfigured');
+  assert.equal(missing[0].actionRequired, 'arkcliNotInstalled');
+  const signedOut = await fetchVolcengineLimits({}, { env: {}, runArkcli: async () => ({ ...auth, logged_in: false }) });
+  assert.equal(signedOut[0].status, 'notConfigured');
+  assert.equal(signedOut[0].actionRequired, 'arkcliNotSignedIn');
+});
+test('Coding Plan is reported as its own percent-only row beside the Agent Plan', async () => {
+  const coding = {
+    viewer: { account_id: 'account', user_id: 'user', region: 'cn-beijing' },
+    items: [{ product: 'coding-plan', edition: 'personal', subscribed: true, periods: [
+      { label: 'session', percent: 25, reset_at: '2026-09-10T16:00:00+08:00' },
+      { label: 'weekly', percent: 0 },
+      { label: 'monthly', percent: 90 }
+    ] }]
+  };
+  const rows = await fetchVolcengineLimits({}, { env: {}, runArkcli: async (args) => {
+    if (args[0] === 'auth') return auth;
+    return args.includes('coding-plan') ? coding : response();
+  } });
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].accountLabel, 'Agent Plan');
+  assert.equal(rows[1].accountLabel, 'Coding Plan');
+  assert.notEqual(rows[0].accountKey, rows[1].accountKey);
+  // Coding Plan reports percentages only; no absolute amount is invented.
+  assert.equal(rows[1].windows[0].usedPercent, 25);
+  assert.equal(rows[1].windows[0].remainingPercent, 75);
+  assert.equal(rows[1].windows[0].label, '5-hour');
+  assert.equal(rows[1].windows[2].remainingPercent, 10);
+  assert.equal(rows[1].windows[0].resetsAt, '2026-09-10T08:00:00.000Z');
+});
+test('an unsubscribed Coding Plan stays silent while the Agent Plan still reports', async () => {
+  const rows = await fetchVolcengineLimits({}, { env: {}, runArkcli: async (args) => {
+    if (args[0] === 'auth') return auth;
+    return args.includes('coding-plan')
+      ? { viewer: { account_id: 'account' }, items: [{ product: 'coding-plan', subscribed: false, periods: [] }] }
+      : response();
+  } });
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].accountLabel, 'Agent Plan');
+});
+test('a malformed Coding Plan percentage is unavailable, not zero usage', () => {
+  for (const percent of [undefined, null, '0', -1, NaN, Infinity]) {
+    const body = { viewer: { account_id: 'account' },
+      items: [{ product: 'coding-plan', subscribed: true, periods: [{ label: 'weekly', percent }] }] };
+    assert.throws(() => parseArkcliPlan(body, now, 'coding-plan'), /arkcli quota probe failed/);
+  }
+});
 test('process invocation is shell-free, noninteractive and suppresses implicit CLI updates', async () => {
   const value = await runArkcli(['auth', 'status'], { env: {}, spawn: (command, args, options) => {
     assert.equal(command, 'arkcli'); assert.equal(options.shell, false);

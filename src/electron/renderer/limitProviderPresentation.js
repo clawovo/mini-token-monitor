@@ -300,6 +300,15 @@
         tone: 'setup'
       };
     }
+    // The Ark plan key reads inference only, so plan quota comes from the CLI.
+    // These name the one concrete step that unblocks it, instead of a generic
+    // "not configured" that leaves the user guessing.
+    if (providerName === 'volcengine' && provider?.actionRequired === 'arkcliNotInstalled') {
+      return { label: 'Install arkcli', key: 'settings.volcengine.arkcliNotInstalled', tone: 'setup' };
+    }
+    if (providerName === 'volcengine' && provider?.actionRequired === 'arkcliNotSignedIn') {
+      return { label: 'Run arkcli login', key: 'settings.volcengine.arkcliNotSignedIn', tone: 'setup' };
+    }
     if (status === 'ok') return { label: isLinkedStatus(provider) ? 'Linked' : 'Live', tone: 'ok' };
     if (status === 'disabled') return { label: 'Disabled', tone: 'muted' };
     if (status === 'noSyncedData') return { label: 'No synced data', tone: 'sync' };

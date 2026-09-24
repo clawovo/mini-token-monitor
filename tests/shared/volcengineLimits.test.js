@@ -668,6 +668,48 @@ test('fetchVolcengineLimits signs the Agent Plan with the Coding Plan key when n
   assert.match(agent.auth, /Credential=AKLT-shared\//);
 });
 
+test('a refused Ark API key falls back to the logged-in CLI', async () => {
+  const rows = await fetchVolcengineLimits(
+    { volcengineAccessKeyId: 'ark-test' },
+    {
+      env: {},
+      now: () => Date.parse('2026-07-06T00:00:00Z'),
+      // A plan API key cannot sign the management plane, and the Coding Plan
+      // endpoint refuses a key issued for another plan.
+      fetch: async () => ({ ok: false, status: 401, json: async () => ({}), headers: { get: () => null } }),
+      runArkcli: async (args) => (args[0] === 'auth'
+        ? { logged_in: true, auth_method: 'sso', active_profile: { name: 'personal' } }
+        : { viewer: { account_id: 'account', region: 'cn-beijing' },
+          items: [{ product: 'agent-plan', subscribed: true, periods: [{ label: 'weekly', used: 5, total: 100 }] }] })
+    }
+  );
+  assert.equal(rows[0].source, 'cli');
+  assert.equal(rows[0].status, 'ok');
+  assert.equal(rows[0].accountLabel, 'Agent Plan');
+});
+test('a refused Ark API key reports the CLI state when the CLI cannot answer either', async () => {
+  const probeRefused = async () => ({ ok: false, status: 401, json: async () => ({}), headers: { get: () => null } });
+  // A missing CLI names a concrete next step, which beats blaming a key that is
+  // valid for inference but was never a quota credential.
+  const missing = await fetchVolcengineLimits({ volcengineAccessKeyId: 'ark-test' }, {
+    env: {},
+    fetch: probeRefused,
+    runArkcli: async () => {
+      throw Object.assign(new Error('private output'), { status: 'notConfigured', code: 'arkcliMissing' });
+    }
+  });
+  assert.equal(missing[0].status, 'notConfigured');
+  assert.equal(missing[0].actionRequired, 'arkcliNotInstalled');
+  // A transient CLI failure says nothing actionable, so the refusal survives.
+  const transient = await fetchVolcengineLimits({ volcengineAccessKeyId: 'ark-test' }, {
+    env: {},
+    fetch: probeRefused,
+    runArkcli: async () => {
+      throw Object.assign(new Error('private output'), { status: 'unavailable' });
+    }
+  });
+  assert.equal(transient[0].status, 'unauthorized');
+});
 test('fetchVolcengineLimits never queries the Agent Plan with an Ark API key', async () => {
   const requests = [];
   await fetchVolcengineLimits(

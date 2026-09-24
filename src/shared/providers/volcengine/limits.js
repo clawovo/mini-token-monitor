@@ -537,8 +537,40 @@ async function fetchVolcengineLimits(options = {}, deps = {}) {
     return fetchVolcengineArkLimits(credentials, deps, now, updatedAt);
   };
 
+  // A plan API key (the console's 专属 APIKey) authenticates inference, not the
+  // management plane, so it can never answer for a plan's quota: the only probe
+  // available to it reports request rate limits and is bound to the single
+  // endpoint it belongs to. When that probe is refused, the logged-in CLI is the
+  // remaining source and it answers for both plans, so it is consulted instead
+  // of reporting a credential that is not actually wrong. Only a refusal
+  // triggers this: a transport failure says nothing about the key.
+  const arkcliFallbackRows = async () => {
+    if (env.TOKEN_MONITOR_VOLCENGINE_ARKCLI === '0') return null;
+    try {
+      return await fetchArkcliLimits(deps, updatedAt);
+    } catch (error) {
+      if (deps.signal?.aborted) throw error;
+      return null;
+    }
+  };
+
   try {
-    if (credentials.mode === 'ark') return [await tryArkFallback()];
+    if (credentials.mode === 'ark') {
+      try {
+        return [await tryArkFallback()];
+      } catch (error) {
+        const refused = error?.status === 'unauthorized' || error?.code === 'arkProbeUnsupported';
+        if (!refused) throw error;
+        const cliRows = await arkcliFallbackRows();
+        const usable = (cliRows || []).filter((row) => row.status === 'ok');
+        if (usable.length) return usable;
+        // Neither source produced quota. A CLI row that names a concrete next
+        // step (install it, sign in) is more actionable than blaming a key that
+        // is valid for inference, so it wins over the probe's rejection.
+        if ((cliRows || []).some((row) => row.actionRequired)) return cliRows;
+        return [statusRow(error.status || 'unauthorized')];
+      }
+    }
 
     // Coding Plan and Agent Plan are independent subscriptions on the same
     // account, so query both and report whichever ones carry quota. Neither is
@@ -627,6 +659,10 @@ async function fetchVolcengineArkLimits(credentials, deps, now, updatedAt) {
     if (result.status === 403 || result.status === 404) {
       lastError = new Error(`Volcengine Ark probe model ${model} returned ${result.status}`);
       lastError.status = 'unavailable';
+      // Every candidate model being refused means this key does not belong to
+      // the Coding Plan endpoint, which is a fact about the credential rather
+      // than a transport failure and is handled by the caller.
+      lastError.code = 'arkProbeUnsupported';
       continue;
     }
     if (result.status !== 200 && result.status !== 429) {
