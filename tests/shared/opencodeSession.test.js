@@ -54,6 +54,75 @@ function makeDb({ session, messages = [], parts = [] }) {
   return file;
 }
 
+// OpenCode 2 keeps the same file name and moves the data to `session_v2` /
+// `session_message`: the role is the row's `type`, a user prompt is `text`, and
+// an assistant turn folds text/tool blocks into `content`. The fixtures mirror
+// a real 2.x database rather than inventing a shape.
+function makeV2Db({ session, messages = [] }) {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ocsess-v2-'));
+  tmpDirs.push(tmp);
+  const file = path.join(tmp, 'opencode.db');
+  const db = new sqlite.DatabaseSync(file);
+  db.exec('CREATE TABLE session_v2 (id TEXT PRIMARY KEY, title TEXT, directory TEXT, time_created INTEGER, time_updated INTEGER)');
+  db.exec('CREATE TABLE session_message (id TEXT PRIMARY KEY, session_id TEXT, type TEXT, time_created INTEGER, time_updated INTEGER, data TEXT)');
+
+  db.prepare('INSERT INTO session_v2 (id, title, directory, time_created, time_updated) VALUES (?,?,?,?,?)')
+    .run(session.id, session.title || '', session.directory || '', session.created, session.updated ?? session.created);
+
+  const ins = db.prepare('INSERT INTO session_message (id, session_id, type, time_created, time_updated, data) VALUES (?,?,?,?,?,?)');
+  for (const m of messages) {
+    const data = m.type === 'assistant'
+      ? {
+        time: { created: m.createdMs },
+        model: { id: m.model || 'big-pickle', providerID: 'opencode' },
+        cost: m.cost ?? 0,
+        tokens: m.tokens || {},
+        content: m.content || []
+      }
+      : {
+        time: { created: m.createdMs },
+        text: m.text || '',
+        metadata: m.displayText ? { displayText: m.displayText } : {}
+      };
+    ins.run(m.id, session.id, m.type, m.createdMs, m.createdMs, JSON.stringify(data));
+  }
+
+  db.close();
+  return file;
+}
+
+function v2Fixture() {
+  return makeV2Db({
+    session: { id: 'v2', title: 'V2 greeting', directory: 'D:/repo/app', created: T0, updated: T4 + 60_000 },
+    messages: [
+      { id: 'u1', type: 'user', createdMs: T0, text: 'Hello there' },
+      {
+        id: 'a1',
+        type: 'assistant',
+        createdMs: T1,
+        cost: 0.5,
+        tokens: { total: 9441, input: 9416, output: 9, reasoning: 16, cache: { read: 0, write: 0 } },
+        content: [
+          { type: 'reasoning', text: 'private chain of thought' },
+          { type: 'text', text: 'Hi, reply text' },
+          { type: 'tool', name: 'bash' },
+          { type: 'tool', name: 'bash' }
+        ]
+      },
+      { id: 'u2', type: 'user', createdMs: T2, text: '', displayText: 'Do a search' },
+      {
+        id: 'a2',
+        type: 'assistant',
+        createdMs: T3,
+        cost: 0.25,
+        tokens: { total: 100, input: 50, output: 30, reasoning: 5, cache: { read: 15, write: 0 } },
+        content: [{ type: 'tool', name: 'websearch' }]
+      },
+      { id: 'c1', type: 'compaction', createdMs: T4, text: 'compaction summary' }
+    ]
+  });
+}
+
 // Token sample lifted from a real opencode.db row. The DB's stored total (9441) ADDS reasoning
 // (16) on top of input+output+cache (9425). We total the tokscale way (9425, reasoning excluded)
 // so the detail matches the session card.
@@ -210,4 +279,72 @@ maybe('readSessionEvents returns found:false when sqlite is unavailable', () => 
   const file = fixture();
   const out = ocs.readSessionEvents('s1', { dbPaths: [file], sqlite: null });
   assert.deepStrictEqual(out, { found: false, events: [], sessionCost: 0 });
+});
+
+// ---------------------------------------------------------------------------
+// OpenCode 2 (`session_v2` / `session_message`)
+// ---------------------------------------------------------------------------
+maybe('readSessionMeta reads the v2 tables, including the session directory', () => {
+  const file = v2Fixture();
+  const meta = ocs.readSessionMeta(['v2', 'missing'], { dbPaths: [file], sqlite });
+  assert.strictEqual(meta.size, 1);
+  assert.deepStrictEqual(meta.get('v2'), {
+    startedAt: new Date(T0).toISOString(),
+    // The session's own time_updated is newer than every message; only real
+    // message activity may claim recency.
+    lastUsedAt: new Date(T4).toISOString(),
+    title: 'V2 greeting',
+    projectPath: 'D:/repo/app'
+  });
+});
+
+maybe('readSessionMeta falls back to v2 creation time when no message exists', () => {
+  const file = makeV2Db({
+    session: { id: 'empty', title: 'Empty', created: T0, updated: T4 + 60_000 }
+  });
+  const meta = ocs.readSessionMeta(['empty'], { dbPaths: [file], sqlite });
+  assert.equal(meta.get('empty').lastUsedAt, new Date(T0).toISOString());
+  assert.equal(meta.get('empty').projectPath, undefined);
+});
+
+maybe('readSessionEvents reads v2 prompts, inline content blocks and per-turn cost', () => {
+  const file = v2Fixture();
+  const out = ocs.readSessionEvents('v2', { dbPaths: [file], sqlite });
+
+  assert.strictEqual(out.found, true);
+  // The compaction row is neither a prompt nor a turn.
+  assert.deepStrictEqual(out.events.map((e) => e.kind), ['prompt', 'turn', 'prompt', 'turn']);
+  assert.strictEqual(out.events[0].text, 'Hello there');
+  // An attachment-only prompt has an empty `text`; displayText is the render.
+  assert.strictEqual(out.events[2].text, 'Do a search');
+  // Tool blocks are deduped, and a reasoning block never becomes a prompt.
+  assert.deepStrictEqual(out.events[1].tools, ['bash']);
+  assert.deepStrictEqual(out.events[3].tools, ['websearch']);
+  assert.ok(!/private chain of thought/.test(out.events.map((e) => e.text || '').join(' ')));
+  assert.strictEqual(out.sessionCost, 0.75);
+});
+
+maybe('readSessionEvents totals v2 turns the tokscale way (reasoning excluded)', () => {
+  const file = v2Fixture();
+  const out = ocs.readSessionEvents('v2', { dbPaths: [file], sqlite });
+  assert.deepStrictEqual(out.events[1].tokens, {
+    input: 9416, output: 9, cacheRead: 0, cacheWrite: 0, reasoning: 16, total: 9425
+  });
+  assert.strictEqual(out.events[1].cost, 0.5);
+});
+
+maybe('readSessionEvents does not fall back to v1 tables inside a v2 database', () => {
+  // A v2 database wins even if a v1 `message` table is still present, otherwise
+  // migrated rows would be counted twice.
+  const file = v2Fixture();
+  const db = new sqlite.DatabaseSync(file);
+  db.exec('CREATE TABLE message (id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT)');
+  db.prepare('INSERT INTO message VALUES (?,?,?,?)').run('legacy', 'v2', T1, JSON.stringify({
+    role: 'assistant', cost: 99, time: { created: T1 }, tokens: { input: 1, output: 1 }
+  }));
+  db.close();
+
+  const out = ocs.readSessionEvents('v2', { dbPaths: [file], sqlite });
+  assert.strictEqual(out.sessionCost, 0.75);
+  assert.deepStrictEqual(out.events.map((e) => e.kind), ['prompt', 'turn', 'prompt', 'turn']);
 });

@@ -4,6 +4,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
+const { hasTable, isV2Database } = require('./dbSchema');
+
 let sqlite = null;
 try { sqlite = require('node:sqlite'); } catch (_) { sqlite = null; }
 
@@ -127,11 +129,31 @@ const GO_ROWS_SQL = `
     AND json_extract(data,'$.role') = 'assistant'
     AND json_type(data,'$.cost') IN ('integer','real')`;
 
+// v2 renamed the table, moved the role onto the row and the provider under
+// `model`; cost and the token payload kept their shape. Both queries stay
+// separate rather than one merged/`COALESCE`d statement so a broken generation
+// cannot silently match rows from the other.
+const GO_ROWS_SQL_V2 = `
+  SELECT CAST(COALESCE(json_extract(data,'$.time.created'), time_created) AS INTEGER) AS createdMs,
+         CAST(json_extract(data,'$.cost') AS REAL) AS cost
+  FROM session_message
+  WHERE json_valid(data)
+    AND json_extract(data,'$.model.providerID') = 'opencode-go'
+    AND type = 'assistant'
+    AND json_type(data,'$.cost') IN ('integer','real')`;
+
+function goRowsSql(db) {
+  if (isV2Database(db)) return GO_ROWS_SQL_V2;
+  return hasTable(db, 'message') ? GO_ROWS_SQL : '';
+}
+
 function readGoRows(dbPath, sqliteMod = sqlite) {
   const db = new sqliteMod.DatabaseSync(dbPath, { readOnly: true });
   try {
     db.exec('PRAGMA busy_timeout = 250');
-    const rows = db.prepare(GO_ROWS_SQL).all();
+    const sql = goRowsSql(db);
+    if (!sql) return [];
+    const rows = db.prepare(sql).all();
     return rows
       .filter((r) => Number.isFinite(r.createdMs) && r.createdMs > 0 && Number.isFinite(r.cost) && r.cost >= 0)
       .map((r) => ({ createdMs: Number(r.createdMs), cost: Number(r.cost) }));

@@ -34,6 +34,28 @@ function makeDb(messages) {
   return file;
 }
 
+// OpenCode 2: `session_message`, role in the `type` column, provider under
+// `model.providerID`.
+function makeV2Db(messages) {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ocdb-v2-'));
+  tmpDirs.push(tmp);
+  const file = path.join(tmp, 'opencode.db');
+  const db = new DatabaseSync(file);
+  db.exec('CREATE TABLE session_message (id TEXT PRIMARY KEY, session_id TEXT, type TEXT, time_created INTEGER, time_updated INTEGER, data TEXT)');
+  const ins = db.prepare('INSERT INTO session_message (id, session_id, type, time_created, time_updated, data) VALUES (?,?,?,?,?,?)');
+  let i = 0;
+  for (const m of messages) {
+    const data = JSON.stringify({
+      model: { providerID: m.providerID },
+      cost: m.cost,
+      time: { created: m.createdMs }
+    });
+    ins.run('m' + (i++), 's1', m.type || 'assistant', m.createdMs, m.createdMs, data);
+  }
+  db.close();
+  return file;
+}
+
 // ---------------------------------------------------------------------------
 // Test 1: weekStartMs returns UTC Monday 00:00
 // ---------------------------------------------------------------------------
@@ -179,4 +201,54 @@ test('collectGo returns notConfigured when no db exists', () => {
     now: () => Date.UTC(2026, 5, 4)
   });
   assert.strictEqual(result.status, 'notConfigured');
+});
+
+// ---------------------------------------------------------------------------
+// Test 10: OpenCode 2 (`session_message`) local Go ledger
+// ---------------------------------------------------------------------------
+test('collectGo sums opencode-go cost from OpenCode 2 session_message rows', () => {
+  const now = Date.UTC(2026, 5, 4, 12, 0, 0);
+  const file = makeV2Db([
+    { providerID: 'opencode-go', cost: 3, createdMs: now - 60 * 60 * 1000 },
+    { providerID: 'opencode-go', cost: 6, createdMs: Date.UTC(2026, 5, 2) },
+    { providerID: 'opencode', cost: 99, createdMs: now - 1000 }
+  ]);
+  const result = oc.collectGo({ env: { OPENCODE_DB: file }, now: () => now });
+  assert.strictEqual(result.status, 'ok');
+
+  const session = result.windows.find((w) => w.kind === 'session');
+  const weekly = result.windows.find((w) => w.kind === 'weekly');
+  const monthly = result.windows.find((w) => w.kind === 'monthly');
+  assert.strictEqual(session.used, 3);
+  assert.strictEqual(session.usedPercent, 25);
+  assert.strictEqual(weekly.used, 9);
+  assert.strictEqual(monthly.used, 9);
+});
+
+test('collectGo in OpenCode 2 only counts assistant rows (type column gates the role)', () => {
+  const now = Date.UTC(2026, 5, 4, 12, 0, 0);
+  const file = makeV2Db([
+    { type: 'user', providerID: 'opencode-go', cost: 50, createdMs: now - 1000 },
+    { type: 'assistant', providerID: 'opencode-go', cost: 2, createdMs: now - 2000 }
+  ]);
+  const result = oc.collectGo({ env: { OPENCODE_DB: file }, now: () => now });
+  const session = result.windows.find((w) => w.kind === 'session');
+  assert.strictEqual(session.used, 2);
+});
+
+test('collectGo does not double count a v2 database that still has a v1 message table', () => {
+  const now = Date.UTC(2026, 5, 4, 12, 0, 0);
+  const file = makeV2Db([
+    { providerID: 'opencode-go', cost: 4, createdMs: now - 1000 }
+  ]);
+  const db = new DatabaseSync(file);
+  db.exec('CREATE TABLE message (id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT)');
+  db.prepare('INSERT INTO message VALUES (?,?,?,?)').run('legacy', 's1', now - 500, JSON.stringify({
+    role: 'assistant', providerID: 'opencode-go', cost: 40, time: { created: now - 500 }
+  }));
+  db.close();
+
+  const result = oc.collectGo({ env: { OPENCODE_DB: file }, now: () => now });
+  const session = result.windows.find((w) => w.kind === 'session');
+  assert.strictEqual(session.used, 4);
 });

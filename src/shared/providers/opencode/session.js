@@ -1,11 +1,17 @@
 'use strict';
 
 // Reads OpenCode session metadata + per-exchange detail from opencode.db (SQLite).
-// This is the only place that reads the DB for *sessions*; it mirrors the discovery and
-// feature-detection used by ./opencodeLimits (node:sqlite, read-only, deps.sqlite seam).
-// OpenCode has no jsonl transcript like Claude/Codex — everything lives in the DB.
+// This is the only place that reads the DB for *sessions*.
+//
+// OpenCode v2 renamed the session tables (`session`/`message`/`part` became
+// `session_v2`/`session_message`, with message content inline) while keeping the
+// same opencode.db file name, so every read below picks the generation from the
+// schema it opened instead of assuming v1. A v1 query against a v2 file is not
+// "this database is unreadable" — the session would simply lose its detail view
+// while tokscale kept counting its tokens.
 
 const { discoverDbPaths } = require('./goLimits');
+const { isV2Database, tableColumns } = require('./dbSchema');
 const path = require('node:path');
 
 let sqlite = null;
@@ -55,9 +61,12 @@ function readSessionMeta(sessionIds, deps = {}) {
     let db;
     try {
       db = openDb(dbPath, sqliteMod);
-      const columns = new Set(db.prepare('PRAGMA table_info(session)').all().map((column) => String(column.name)));
+      const v2 = isV2Database(db);
+      const sessionTable = v2 ? 'session_v2' : 'session';
+      const columns = tableColumns(db, sessionTable);
+      if (columns.size === 0) continue;
       const directory = columns.has('directory') ? "COALESCE(directory,'')" : "''";
-      const messageColumns = new Set(db.prepare('PRAGMA table_info(message)').all().map((column) => String(column.name)));
+      const messageColumns = tableColumns(db, v2 ? 'session_message' : 'message');
       const lastMessageBySession = new Map();
       if (messageColumns.has('session_id') && (messageColumns.has('data') || messageColumns.has('time_created'))) {
         const jsonCreated = messageColumns.has('data')
@@ -66,7 +75,7 @@ function readSessionMeta(sessionIds, deps = {}) {
         const storedCreated = messageColumns.has('time_created') ? 'time_created' : 'NULL';
         const messageSql = `SELECT session_id AS sessionId,
                                    MAX(CAST(COALESCE(${jsonCreated}, ${storedCreated}) AS INTEGER)) AS lastMessageMs
-                            FROM message
+                            FROM ${v2 ? 'session_message' : 'message'}
                             WHERE session_id IN (${placeholders})
                             GROUP BY session_id`;
         for (const row of db.prepare(messageSql).all(...ids)) {
@@ -74,7 +83,7 @@ function readSessionMeta(sessionIds, deps = {}) {
         }
       }
       const sql = `SELECT id, COALESCE(title,'') AS title, ${directory} AS directory, time_created AS created
-                   FROM session WHERE id IN (${placeholders})`;
+                   FROM ${sessionTable} WHERE id IN (${placeholders})`;
       for (const r of db.prepare(sql).all(...ids)) {
         const id = String(r.id);
         if (out.has(id)) continue;
@@ -150,6 +159,39 @@ const PARTS_SQL =
    WHERE session_id = ? AND json_valid(data)
    ORDER BY time_created ASC, id ASC`;
 
+// v2 keeps role on the row and folds the parts into `content`; a user message's
+// prompt is `text` (with `metadata.displayText` as the render the UI shows when
+// it differs, e.g. an attachment-only prompt).
+//
+// The blocks are extracted by SQLite rather than selected as one JSON string per
+// message: `content` also holds reasoning text and complete tool output, and a
+// long agent session would otherwise copy tens of megabytes into this process
+// only to read a block type and a tool name.
+const V2_MESSAGES_SQL =
+  `SELECT id,
+          CAST(COALESCE(json_extract(data,'$.time.created'), time_created) AS INTEGER) AS createdMs,
+          type                                       AS role,
+          json_extract(data,'$.cost')                AS cost,
+          json_extract(data,'$.tokens.input')        AS tInput,
+          json_extract(data,'$.tokens.output')       AS tOutput,
+          json_extract(data,'$.tokens.reasoning')    AS tReasoning,
+          json_extract(data,'$.tokens.cache.read')   AS tCacheRead,
+          json_extract(data,'$.tokens.cache.write')  AS tCacheWrite,
+          json_extract(data,'$.text')                AS text,
+          json_extract(data,'$.metadata.displayText') AS displayText
+   FROM session_message
+   WHERE session_id = ? AND json_valid(data)
+   ORDER BY createdMs ASC, id ASC`;
+
+const V2_PARTS_SQL =
+  `SELECT m.id                                        AS messageId,
+          json_extract(block.value,'$.type')          AS type,
+          json_extract(block.value,'$.text')          AS text,
+          json_extract(block.value,'$.name')          AS tool
+   FROM session_message AS m, json_each(m.data, '$.content') AS block
+   WHERE m.session_id = ? AND m.type = 'assistant' AND json_valid(m.data)
+   ORDER BY m.time_created ASC, m.id ASC, block.key ASC`;
+
 function mapTokens(r) {
   const input = num(r.tInput);
   const output = num(r.tOutput);
@@ -194,6 +236,36 @@ function buildEvents(messages, parts) {
   return { events, sessionCost };
 }
 
+// v2 rows are rewritten into the same {messages, parts} shape buildEvents already
+// understands, so the two generations cannot drift in how they total a turn or
+// order an exchange. Only `text` and `tool` blocks become parts: reasoning is
+// intentionally not a prompt, and tool output is not needed by Session Detail.
+function readV2Messages(db, id) {
+  const messages = db.prepare(V2_MESSAGES_SQL).all(id);
+  if (messages.length === 0) return null;
+
+  const parts = [];
+  for (const row of messages) {
+    if (row.role !== 'user') continue;
+    const text = String(row.text || row.displayText || '');
+    if (text) parts.push({ messageId: row.id, type: 'text', text });
+  }
+  for (const block of db.prepare(V2_PARTS_SQL).all(id)) {
+    if (block.type === 'text' && block.text) {
+      parts.push({ messageId: block.messageId, type: 'text', text: String(block.text) });
+    } else if (block.type === 'tool' && block.tool) {
+      parts.push({ messageId: block.messageId, type: 'tool', tool: String(block.tool) });
+    }
+  }
+  return { messages, parts };
+}
+
+function readV1Messages(db, id) {
+  const messages = db.prepare(MESSAGES_SQL).all(id);
+  if (messages.length === 0) return null;
+  return { messages, parts: db.prepare(PARTS_SQL).all(id) };
+}
+
 function readSessionEvents(sessionId, deps = {}) {
   const empty = { found: false, events: [], sessionCost: 0 };
   const id = String(sessionId || '');
@@ -205,10 +277,10 @@ function readSessionEvents(sessionId, deps = {}) {
     let db;
     try {
       db = openDb(dbPath, sqliteMod);
-      const messages = db.prepare(MESSAGES_SQL).all(id);
-      if (messages.length === 0) continue;
-      const parts = db.prepare(PARTS_SQL).all(id);
-      const { events, sessionCost } = buildEvents(messages, parts);
+      const read = isV2Database(db) ? readV2Messages : readV1Messages;
+      const rows = read(db, id);
+      if (!rows) continue;
+      const { events, sessionCost } = buildEvents(rows.messages, rows.parts);
       return { found: true, events, sessionCost };
     } catch (_) { /* skip unreadable db */ } finally {
       if (db) { try { db.close(); } catch (_) {} }

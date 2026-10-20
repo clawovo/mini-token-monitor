@@ -103,3 +103,65 @@ maybe('readSessionDetail(opencode) returns not-found for an unknown session', ()
   assert.strictEqual(detail.found, false);
   assert.deepStrictEqual(detail.exchanges, []);
 });
+
+// OpenCode 2: same file name, `session_v2` / `session_message`, role on the row
+// and content inline. The detail view must group and total exactly as it did for
+// v1, so this fixture carries the same conversation as makeFixture().
+function makeV2Fixture() {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ocdetail-v2-'));
+  tmpDirs.push(tmp);
+  const file = path.join(tmp, 'opencode.db');
+  const db = new sqlite.DatabaseSync(file);
+  db.exec('CREATE TABLE session_v2 (id TEXT PRIMARY KEY, title TEXT, directory TEXT, time_created INTEGER, time_updated INTEGER)');
+  db.exec('CREATE TABLE session_message (id TEXT PRIMARY KEY, session_id TEXT, type TEXT, time_created INTEGER, time_updated INTEGER, data TEXT)');
+  db.prepare('INSERT INTO session_v2 VALUES (?,?,?,?,?)').run('s1', 'Greeting', 'D:/repo/app', T0, T2);
+  const insM = db.prepare('INSERT INTO session_message (id, session_id, type, time_created, time_updated, data) VALUES (?,?,?,?,?,?)');
+  const asst = (cost, tokens, createdMs, content) => JSON.stringify({
+    time: { created: createdMs }, model: { id: 'big-pickle', providerID: 'opencode' }, cost, tokens, content
+  });
+  const user = (createdMs, text) => JSON.stringify({ time: { created: createdMs }, text, metadata: { displayText: text } });
+  insM.run('m0', 's1', 'user', T0, T0, user(T0, 'Hello there'));
+  insM.run('m1', 's1', 'assistant', T1, T1, asst(0.5, { total: 9441, input: 9416, output: 9, reasoning: 16, cache: { read: 0, write: 0 } }, T1, [{ type: 'text', text: 'Hi, reply text' }]));
+  insM.run('m2', 's1', 'user', T2, T2, user(T2, 'Do a search'));
+  insM.run('m3', 's1', 'assistant', T3, T3, asst(0.25, { total: 100, input: 50, output: 30, reasoning: 5, cache: { read: 15, write: 0 } }, T3, [{ type: 'tool', name: 'websearch' }]));
+  insM.run('m4', 's1', 'assistant', T4, T4, asst(0.1, { total: 200, input: 120, output: 40, reasoning: 0, cache: { read: 40, write: 0 } }, T4, [{ type: 'text', text: 'Found it' }]));
+  db.close();
+  return file;
+}
+
+maybe('readSessionDetail(opencode) groups OpenCode 2 session_message rows the same way', () => {
+  const file = makeV2Fixture();
+  const detail = readSessionDetail({
+    client: 'opencode', sessionId: 's1', period: 'total',
+    deps: { dbPaths: [file], sqlite, now: () => T4 + 1000 }
+  });
+  assert.strictEqual(detail.found, true);
+  assert.strictEqual(detail.exchanges.length, 2);
+
+  const [ex1, ex2] = detail.exchanges;
+  assert.strictEqual(ex1.promptPreview, 'Hello there');
+  assert.strictEqual(ex1.turnCount, 1);
+  assert.strictEqual(ex1.tokens.total, 9425);
+  assert.strictEqual(ex1.costEstimate, 0.5);
+
+  assert.strictEqual(ex2.promptPreview, 'Do a search');
+  assert.strictEqual(ex2.turnCount, 2);
+  assert.strictEqual(ex2.tokens.total, 295);
+  assert.ok(Math.abs(ex2.costEstimate - 0.35) < 1e-9);
+
+  assert.strictEqual(detail.totals.totalTokens, 9720);
+  assert.strictEqual(detail.totals.turnCount, 3);
+  assert.strictEqual(detail.totals.exchangeCount, 2);
+  assert.ok(Math.abs(detail.totals.costUsd - 0.85) < 1e-9);
+});
+
+maybe('readSessionDetail(opencode) filters OpenCode 2 turns by period too', () => {
+  const file = makeV2Fixture();
+  const detail = readSessionDetail({
+    client: 'opencode', sessionId: 's1', period: 'today',
+    deps: { dbPaths: [file], sqlite, now: () => Date.UTC(2026, 6, 1, 12, 0, 0) }
+  });
+  assert.strictEqual(detail.found, true);
+  assert.strictEqual(detail.exchanges.length, 0);
+  assert.strictEqual(detail.totals.totalTokens, 0);
+});

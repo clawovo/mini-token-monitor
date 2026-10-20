@@ -8,16 +8,15 @@
 // workspace without one. There is no Zen balance endpoint, so `./web.js`
 // stays the only source for that.
 //
-// This path needs no user setup: `opencode` writes the subscription key into
-// auth.json during its connect flow, which is why it is preferred over the
-// cookie scrape and the local-DB estimate.
+// This path needs no user setup: `opencode` writes the subscription key during
+// its connect flow — auth.json in v1, the `credential` table of opencode.db in
+// v2 (see ./credentials.js) — which is why it is preferred over the cookie
+// scrape and the local-DB estimate.
 
 const crypto = require('node:crypto');
-const fs = require('node:fs');
-const path = require('node:path');
 
 const { createOutboundFetch } = require('../../outboundFetch');
-const { resolveDataDir } = require('./goLimits');
+const { readCredentialDocument } = require('./credentials');
 const { cleanSecret } = require('../../limits/providerHelpers');
 
 const GO_USAGE_URL = 'https://opencode.ai/zen/go/v1/usage';
@@ -53,33 +52,31 @@ function isAbortError(error, signal) {
   return error?.name === 'AbortError' || error?.code === 'ABORT_ERR';
 }
 
-function goAuthPath(env = process.env) {
-  return path.join(resolveDataDir(env), 'auth.json');
-}
-
 // OpenCode's own credential set, read the way OpenCode itself reads it.
 //
 // Mirrors upstream `Auth.all()` rather than approximating it. Two details are
 // load-bearing. The variable is tried first and, when it parses, is returned
-// *instead of* the file rather than merged with it, so a container handed a
-// deliberately restricted credential set does not quietly fall back to a fuller
-// one on disk. Content that does not parse falls through to the file, which is
-// upstream's behaviour too — its parse sits in an empty catch — so a mangled
-// variable degrades to the file rather than to no credential at all.
+// *instead of* the stored set rather than merged with it, so a container handed
+// a deliberately restricted credential set does not quietly fall back to a
+// fuller one on disk. Content that does not parse falls through to disk, which
+// is upstream's behaviour too — its parse sits in an empty catch — so a mangled
+// variable degrades to the stored credential rather than to none at all.
 //
 // OpenCode sets this itself when it spawns a workspace child process, and it is
 // the ordinary way to supply credentials in a container or a CI runner: exactly
-// where the headless agent runs, and where there is no auth.json to read.
-// The file is schema-checked, the variable is not — which is upstream's own
-// asymmetry, not an oversight here. `Auth.all()` decodes auth.json through a
-// union discriminated on `type`, whose API member is `{ type: Literal('api'),
-// key: String }`, and drops every entry that does not match; the variable it
-// returns straight from `JSON.parse`. Validating both would be tidier and would
-// reintroduce exactly the bug the variable was added to fix: a credential
-// OpenCode itself would use, that we would not.
+// where the headless agent runs, and where there is no stored credential to
+// read. The stored set is schema-checked, the variable is not — which is
+// upstream's own asymmetry, not an oversight here. `Auth.all()` decodes the
+// stored set through a union discriminated on `type`, whose API member is
+// `{ type: Literal('api'), key: String }`, and drops every entry that does not
+// match; the variable it returns straight from `JSON.parse`. ./credentials.js
+// normalizes v2's `{ type: 'key', key }` into that same union before it gets
+// here. Validating both would be tidier and would reintroduce exactly the bug
+// the variable was added to fix: a credential OpenCode itself would use, that we
+// would not.
 //
 // Sending a credential we cannot confirm is an API key as a Bearer token is the
-// thing worth avoiding on the file path, and an entry OpenCode would ignore is
+// thing worth avoiding on the stored path, and an entry OpenCode would ignore is
 // not a credential the user has configured for anything.
 function isGoApiCredential(entry) {
   return Boolean(entry)
@@ -88,34 +85,12 @@ function isGoApiCredential(entry) {
     && typeof entry.key === 'string';
 }
 
-function readGoAuthDocument(env) {
-  const inline = String(env.OPENCODE_AUTH_CONTENT || '').trim();
-  if (inline) {
-    try {
-      return { document: JSON.parse(inline), validated: false };
-    } catch (_) { /* fall through to the file, as upstream does */ }
-  }
-
-  let raw;
-  try {
-    raw = fs.readFileSync(goAuthPath(env), 'utf8');
-  } catch (_) {
-    return null;
-  }
-
-  try {
-    return { document: JSON.parse(raw), validated: true };
-  } catch (_) {
-    return null;
-  }
-}
-
 // Returns '' when no key is available — the caller treats that as notConfigured.
-function readGoApiKey(env = process.env) {
+function readGoApiKey(env = process.env, deps = {}) {
   const explicit = cleanSecret(env.TOKEN_MONITOR_OPENCODE_API_KEY);
   if (explicit) return explicit;
 
-  const source = readGoAuthDocument(env);
+  const source = readCredentialDocument(env, deps);
   const parsed = source?.document;
   const entry = parsed && typeof parsed === 'object' ? parsed[GO_AUTH_PROVIDER_ID] : null;
   if (!entry || typeof entry !== 'object') return '';
@@ -255,7 +230,7 @@ async function fetchGoApi(apiKey, deps = {}) {
 // which is how a caller says "this account has no API credential of its own".
 async function collectGoApi(deps = {}) {
   const env = deps.env || process.env;
-  const apiKey = deps.apiKey !== undefined ? deps.apiKey : readGoApiKey(env);
+  const apiKey = deps.apiKey !== undefined ? deps.apiKey : readGoApiKey(env, deps);
   if (!apiKey) return { status: 'notConfigured', windows: [], identity: '' };
 
   const result = await fetchGoApi(apiKey, deps);
@@ -269,7 +244,6 @@ module.exports = {
   GO_USAGE_URL,
   GO_AUTH_PROVIDER_ID,
   isAbortError,
-  goAuthPath,
   readGoApiKey,
   goApiIdentity,
   parseGoUsage,
