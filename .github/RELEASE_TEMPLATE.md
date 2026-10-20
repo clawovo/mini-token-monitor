@@ -4,21 +4,16 @@
 
 <!-- app-update-notes:en:start -->
 ### Added
-- **Coding Plan quota from the CLI:** Reads the Coding Plan alongside the Agent Plan when neither is reachable through an access key, so a CLI-only setup now shows both subscriptions. (#a01a79b)
-- **arkcli install guide:** The Volcengine settings link to the official arkcli installation page, because a plan's dedicated API key cannot read quota. (#ec95b4d)
-
-### Fixed
-- **Ark plan quota with a version-managed CLI:** Finds arkcli installed under nvm, volta, fnm, asdf, pnpm or yarn. A window opened from the Dock or Finder inherits a shortened search path that excluded those locations, so the quota never appeared. (#a01a79b)
-- **Plan API keys reported as invalid:** A plan's dedicated API key (ark-...) authenticates inference only, yet it was probed against the Coding Plan endpoint and its refusal was shown as invalid credentials. It now falls back to the signed-in arkcli, and says whether arkcli is missing or signed out when neither can answer. (#a01a79b)
+- **OpenCode 2 support:** Limits, Session Detail, and the local Go ledger now read OpenCode 2's `opencode.db`. Credentials come from its new `credential` table, with `auth.json` kept as a fallback for older installs. (#1f2ae96)
 <!-- app-update-notes:en:end -->
 
 ## Download
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.3-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.3-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3-x64.dmg)
-- **Windows Installer** — [Mini-Token-Monitor-Setup-0.1.3.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-Setup-0.1.3.exe) (recommended)
-- **Windows Portable** — [Mini-Token-Monitor-0.1.3.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3.exe) (no install required)
-- **Linux x64** — [Mini-Token-Monitor-0.1.3.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.4-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.4-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4-x64.dmg)
+- **Windows Installer** — [Mini-Token-Monitor-Setup-0.1.4.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-Setup-0.1.4.exe) (recommended)
+- **Windows Portable** — [Mini-Token-Monitor-0.1.4.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4.exe) (no install required)
+- **Linux x64** — [Mini-Token-Monitor-0.1.4.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4.AppImage)
 
 <details>
 <summary><strong>First launch and other notes</strong></summary>
@@ -56,21 +51,16 @@ open-source: https://github.com/junhoyeo/tokscale
 
 <!-- app-update-notes:zh:start -->
 ### 新增
-- **通过 CLI 读取 Coding Plan 额度：** 没有 access key 时，除 Agent Plan 外也会读取 Coding Plan，只用 arkcli 的配置现在两个套餐都能显示。（#a01a79b）
-- **arkcli 安装说明：** Volcengine 设置中新增官方 arkcli 安装页链接 —— 套餐专属 APIKey 无法查询额度。（#ec95b4d）
-
-### 修复
-- **版本管理器安装的 arkcli 读不到额度：** 现在可以发现通过 nvm、volta、fnm、asdf、pnpm、yarn 安装的 arkcli。从 Dock 或访达启动的窗口继承的是被截断的搜索路径，不包含这些位置，导致额度一直不显示。（#a01a79b）
-- **套餐 APIKey 被误报为凭证无效：** 套餐专属 APIKey（ark-…）只用于推理鉴权，之前却被拿去请求 Coding Plan 接口，被拒后显示为“凭证无效”。现在会回退到已登录的 arkcli；两者都不可用时，会说明是未安装还是未登录。（#a01a79b）
+- **支持 OpenCode 2：** 限额、会话详情和本地 Go 用量现在从 OpenCode 2 的 `opencode.db` 读取。凭据改从新的 `credential` 表读取，并保留 `auth.json` 作为旧版安装的回退。（#1f2ae96）
 <!-- app-update-notes:zh:end -->
 
 ## 下载
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.3-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.3-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3-x64.dmg)
-- **Windows 安装版** — [Mini-Token-Monitor-Setup-0.1.3.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-Setup-0.1.3.exe)（推荐）
-- **Windows 便携版** — [Mini-Token-Monitor-0.1.3.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3.exe)（免安装）
-- **Linux x64** — [Mini-Token-Monitor-0.1.3.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.4-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.4-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4-x64.dmg)
+- **Windows 安装版** — [Mini-Token-Monitor-Setup-0.1.4.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-Setup-0.1.4.exe)（推荐）
+- **Windows 便携版** — [Mini-Token-Monitor-0.1.4.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4.exe)（免安装）
+- **Linux x64** — [Mini-Token-Monitor-0.1.4.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4.AppImage)
 
 <details>
 <summary><strong>首次启动与其他说明</strong></summary>
@@ -103,7 +93,7 @@ https://github.com/junhoyeo/tokscale
 ---
 
 <details>
-<summary><strong>Full Changelog:</strong> <a href="https://github.com/clawovo/mini-token-monitor/compare/v0.1.2...v0.1.3">v0.1.2...v0.1.3</a></summary>
+<summary><strong>Full Changelog:</strong> <a href="https://github.com/clawovo/mini-token-monitor/compare/v0.1.3...v0.1.4">v0.1.3...v0.1.4</a></summary>
 
 <!-- github-generated-release-notes -->
 
@@ -121,21 +111,16 @@ https://github.com/junhoyeo/tokscale
 
 <!-- app-update-notes:zh-TW:start -->
 ### 新增
-- **透過 CLI 讀取 Coding Plan 額度：** 沒有 access key 時，除 Agent Plan 外也會讀取 Coding Plan，只用 arkcli 的設定現在兩個套餐都能顯示。（#a01a79b）
-- **arkcli 安裝說明：** Volcengine 設定新增官方 arkcli 安裝頁連結 —— 套餐專屬 APIKey 無法查詢額度。（#ec95b4d）
-
-### 修復
-- **版本管理器安裝的 arkcli 讀不到額度：** 現在可以發現透過 nvm、volta、fnm、asdf、pnpm、yarn 安裝的 arkcli。從 Dock 或 Finder 啟動的視窗繼承的是被截斷的搜尋路徑，不包含這些位置，導致額度一直不顯示。（#a01a79b）
-- **套餐 APIKey 被誤報為憑證無效：** 套餐專屬 APIKey（ark-…）只用於推理驗證，之前卻被拿去請求 Coding Plan 介面，被拒後顯示為「憑證無效」。現在會回退到已登入的 arkcli；兩者都不可用時，會說明是未安裝還是未登入。（#a01a79b）
+- **支援 OpenCode 2：** 限額、工作階段詳情與本機 Go 用量現在從 OpenCode 2 的 `opencode.db` 讀取。憑證改從新的 `credential` 表讀取，並保留 `auth.json` 作為舊版安裝的備援。（#1f2ae96）
 <!-- app-update-notes:zh-TW:end -->
 
 ## 下載
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.3-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.3-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3-x64.dmg)
-- **Windows 安裝版** — [Mini-Token-Monitor-Setup-0.1.3.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-Setup-0.1.3.exe)（推薦）
-- **Windows 便攜版** — [Mini-Token-Monitor-0.1.3.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3.exe)（免安裝）
-- **Linux x64** — [Mini-Token-Monitor-0.1.3.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.4-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.4-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4-x64.dmg)
+- **Windows 安裝版** — [Mini-Token-Monitor-Setup-0.1.4.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-Setup-0.1.4.exe)（推薦）
+- **Windows 便攜版** — [Mini-Token-Monitor-0.1.4.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4.exe)（免安裝）
+- **Linux x64** — [Mini-Token-Monitor-0.1.4.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4.AppImage)
 
 </details>
 
@@ -148,21 +133,16 @@ https://github.com/junhoyeo/tokscale
 
 <!-- app-update-notes:ko:start -->
 ### 추가
-- **CLI에서 Coding Plan 할당량 읽기:** access key가 없을 때 Agent Plan과 함께 Coding Plan도 읽어, arkcli만 설정한 환경에서도 두 플랜이 모두 표시됩니다. (#a01a79b)
-- **arkcli 설치 안내:** Volcengine 설정에 공식 arkcli 설치 페이지 링크를 추가했습니다. 플랜 전용 APIKey로는 할당량을 조회할 수 없습니다. (#ec95b4d)
-
-### 수정
-- **버전 관리자로 설치한 arkcli를 찾지 못하던 문제:** nvm, volta, fnm, asdf, pnpm, yarn으로 설치한 arkcli를 찾습니다. Dock이나 Finder에서 실행한 창은 축소된 검색 경로를 물려받아 이런 위치가 빠져 있었고, 그래서 할당량이 표시되지 않았습니다. (#a01a79b)
-- **플랜 APIKey가 잘못된 자격 증명으로 표시되던 문제:** 플랜 전용 APIKey(ark-…)는 추론 인증용인데도 Coding Plan 엔드포인트로 요청되어, 거부되면 "자격 증명이 잘못됨"으로 표시되었습니다. 이제 로그인된 arkcli로 넘어가고, 둘 다 응답하지 못하면 미설치인지 로그아웃 상태인지 알려줍니다. (#a01a79b)
+- **OpenCode 2 지원:** 사용량 한도, 세션 상세, 로컬 Go 사용량을 이제 OpenCode 2의 `opencode.db`에서 읽습니다. 자격 증명은 새 `credential` 테이블에서 읽고, 이전 설치를 위해 `auth.json`을 대체 경로로 유지합니다. (#1f2ae96)
 <!-- app-update-notes:ko:end -->
 
 ## 다운로드
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.3-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.3-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3-x64.dmg)
-- **Windows 설치 버전** — [Mini-Token-Monitor-Setup-0.1.3.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-Setup-0.1.3.exe) (권장)
-- **Windows 포터블 버전** — [Mini-Token-Monitor-0.1.3.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3.exe) (설치 필요 없음)
-- **Linux x64** — [Mini-Token-Monitor-0.1.3.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.4-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.4-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4-x64.dmg)
+- **Windows 설치 버전** — [Mini-Token-Monitor-Setup-0.1.4.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-Setup-0.1.4.exe) (권장)
+- **Windows 포터블 버전** — [Mini-Token-Monitor-0.1.4.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4.exe) (설치 필요 없음)
+- **Linux x64** — [Mini-Token-Monitor-0.1.4.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4.AppImage)
 
 </details>
 
@@ -175,21 +155,16 @@ https://github.com/junhoyeo/tokscale
 
 <!-- app-update-notes:ja:start -->
 ### 追加
-- **CLI からの Coding Plan 割り当て読み取り:** access key がない場合に Agent Plan とあわせて Coding Plan も読み取るため、arkcli だけの構成でも両方のプランが表示されます。（#a01a79b）
-- **arkcli のインストール手順:** Volcengine 設定に公式 arkcli インストールページへのリンクを追加しました。プラン専用 APIKey では割り当てを確認できません。（#ec95b4d）
-
-### 修正
-- **バージョン管理ツールで入れた arkcli が見つからない問題:** nvm、volta、fnm、asdf、pnpm、yarn でインストールした arkcli を検出します。Dock や Finder から起動したウィンドウは短縮された検索パスを引き継ぐため、これらの場所が含まれず、割り当てが表示されませんでした。（#a01a79b）
-- **プラン APIKey が「認証情報が無効」と誤表示される問題:** プラン専用 APIKey（ark-…）は推論認証用ですが Coding Plan エンドポイントへ問い合わせられ、拒否されると「認証情報が無効」と表示されていました。現在はログイン済みの arkcli にフォールバックし、どちらも応答しない場合は未インストールか未ログインかを示します。（#a01a79b）
+- **OpenCode 2 対応:** 利用上限、セッション詳細、ローカル Go 使用量を OpenCode 2 の `opencode.db` から読み取るようになりました。認証情報は新しい `credential` テーブルから読み取り、旧バージョンのインストール向けに `auth.json` をフォールバックとして残します。（#1f2ae96）
 <!-- app-update-notes:ja:end -->
 
 ## ダウンロード
 
-- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.3-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3-arm64.dmg)
-- **macOS Intel** — [Mini-Token-Monitor-0.1.3-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3-x64.dmg)
-- **Windows インストーラー** — [Mini-Token-Monitor-Setup-0.1.3.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-Setup-0.1.3.exe)（推奨）
-- **Windows ポータブル版** — [Mini-Token-Monitor-0.1.3.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3.exe)（インストール不要）
-- **Linux x64** — [Mini-Token-Monitor-0.1.3.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.3/Mini-Token-Monitor-0.1.3.AppImage)
+- **macOS Apple Silicon** — [Mini-Token-Monitor-0.1.4-arm64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4-arm64.dmg)
+- **macOS Intel** — [Mini-Token-Monitor-0.1.4-x64.dmg](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4-x64.dmg)
+- **Windows インストーラー** — [Mini-Token-Monitor-Setup-0.1.4.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-Setup-0.1.4.exe)（推奨）
+- **Windows ポータブル版** — [Mini-Token-Monitor-0.1.4.exe](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4.exe)（インストール不要）
+- **Linux x64** — [Mini-Token-Monitor-0.1.4.AppImage](https://github.com/clawovo/mini-token-monitor/releases/download/v0.1.4/Mini-Token-Monitor-0.1.4.AppImage)
 
 </details>
 
